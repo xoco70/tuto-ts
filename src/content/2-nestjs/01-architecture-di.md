@@ -123,6 +123,7 @@ Utile pour le *strategy pattern* dynamique ; à éviter comme *service locator* 
 - [ ] Ajouter `@Inject()` devant le paramètre
 > Les providers sont encapsulés dans leur module. Il faut les deux : `exports` côté fournisseur, `imports` côté consommateur. Ré-déclarer `UsersService` dans `OrdersModule.providers` « marcherait » mais créerait une **seconde instance** — bug subtil.
 [doc]: NestJS — Modules, shared modules (EN) | https://docs.nestjs.com/modules#shared-modules
+[doc]: NestJS — Modules, shared modules (FR) | https://docs.nest-js.fr/modules
 
 ### Quel est le scope par défaut d'un provider NestJS ?
 - [ ] Une instance par requête
@@ -131,6 +132,7 @@ Utile pour le *strategy pattern* dynamique ; à éviter comme *service locator* 
 - [ ] Une instance par injection
 > Le scope `DEFAULT` est singleton. Conséquence : ne jamais stocker d'état lié à une requête (utilisateur courant…) dans une propriété d'un service singleton — il serait partagé entre requêtes concurrentes.
 [doc]: NestJS — Injection scopes (EN) | https://docs.nestjs.com/fundamentals/injection-scopes
+[doc]: NestJS — Injection scopes (FR) | https://docs.nest-js.fr/fundamentals/injection-scopes
 
 ### Un service singleton injecte un provider `Scope.REQUEST`. Que se passe-t-il ?
 - [ ] Erreur au démarrage
@@ -139,6 +141,7 @@ Utile pour le *strategy pattern* dynamique ; à éviter comme *service locator* 
 - [ ] Le provider est injecté à `undefined`
 > Le scope REQUEST **contamine** toute la chaîne d'injection jusqu'au controller : Nest doit tout ré-instancier à chaque requête, avec un coût mesurable. Pour un simple contexte (tenant, user, correlation id), `AsyncLocalStorage` / `nestjs-cls` est souvent préférable.
 [doc]: NestJS — Scope hierarchy (EN) | https://docs.nestjs.com/fundamentals/injection-scopes#scope-hierarchy
+[doc]: NestJS — Scope hierarchy (FR) | https://docs.nest-js.fr/fundamentals/injection-scopes
 
 ### Quel provider permet de créer un client Redis asynchrone à partir de la configuration ?
 - [ ] `{ provide: 'REDIS', useValue: createClient() }`
@@ -147,6 +150,7 @@ Utile pour le *strategy pattern* dynamique ; à éviter comme *service locator* 
 - [ ] `{ provide: 'REDIS', useExisting: ConfigService }`
 > `useFactory` reçoit les dépendances listées dans `inject` (dans le même ordre) et peut retourner une Promise : Nest attend sa résolution avant de démarrer l'application.
 [doc]: NestJS — Factory providers (EN) | https://docs.nestjs.com/fundamentals/custom-providers#factory-providers-usefactory
+[doc]: NestJS — Factory providers (FR) | https://docs.nest-js.fr/fundamentals/custom-providers
 
 ### Que fait `{ provide: 'AliasedLogger', useExisting: LoggerService }` ?
 - [ ] Il crée une nouvelle instance de `LoggerService`
@@ -155,6 +159,7 @@ Utile pour le *strategy pattern* dynamique ; à éviter comme *service locator* 
 - [ ] Il vérifie que `LoggerService` existe déjà
 > `useExisting` sert à exposer un provider sous plusieurs tokens (ex. une classe concrète aussi accessible via un token d'interface) sans dupliquer l'instance.
 [doc]: NestJS — Alias providers (EN) | https://docs.nestjs.com/fundamentals/custom-providers#alias-providers-useexisting
+[doc]: NestJS — Alias providers (FR) | https://docs.nest-js.fr/fundamentals/custom-providers
 
 ### Pourquoi préférer un `Symbol` plutôt qu'une chaîne comme token d'injection ?
 - [ ] Les chaînes ne sont pas acceptées par Nest
@@ -163,6 +168,7 @@ Utile pour le *strategy pattern* dynamique ; à éviter comme *service locator* 
 - [ ] Les Symbols permettent l'injection d'interfaces sans `@Inject`
 > Deux librairies utilisant le token `'CONFIG'` entreraient en conflit. Un `Symbol('CONFIG')` exporté depuis un fichier de constantes évite cela. `@Inject(TOKEN)` reste nécessaire.
 [doc]: NestJS — Non-class-based provider tokens (EN) | https://docs.nestjs.com/fundamentals/custom-providers#non-class-based-provider-tokens
+[doc]: NestJS — Non-class-based provider tokens (FR) | https://docs.nest-js.fr/fundamentals/custom-providers
 
 ### Quelle est la convention pour un module dynamique configuré une fois pour toute l'application ?
 - [ ] `forFeature()`
@@ -171,6 +177,7 @@ Utile pour le *strategy pattern* dynamique ; à éviter comme *service locator* 
 - [ ] `useModule()`
 > `forRoot` configure une fois (connexion, client…), `forFeature` enregistre des éléments propres à un module consommateur (entités, queues). `register` est utilisé pour une config différente à chaque import.
 [doc]: NestJS — Dynamic modules, community guidelines (EN) | https://docs.nestjs.com/fundamentals/dynamic-modules#community-guidelines
+[doc]: NestJS — Dynamic modules, community guidelines (FR) | https://docs.nest-js.fr/fundamentals/dynamic-modules
 
 ### Comment résoudre une dépendance circulaire entre `UsersService` et `OrdersService` ?
 - [ ] C'est impossible en NestJS
@@ -179,6 +186,7 @@ Utile pour le *strategy pattern* dynamique ; à éviter comme *service locator* 
 - [ ] Passer les deux en `Scope.TRANSIENT`
 > `forwardRef` retarde la résolution de la référence. Mais une circularité est un **signal d'architecture** : extraire la logique partagée dans un troisième service, ou découpler par événements (`EventEmitter2`, CQRS).
 [doc]: NestJS — Circular dependency (EN) | https://docs.nestjs.com/fundamentals/circular-dependency
+[doc]: NestJS — Circular dependency (FR) | https://docs.nest-js.fr/fundamentals/circular-dependency
 
 ### Pourquoi les hooks `onModuleDestroy` / `onApplicationShutdown` ne s'exécutent-ils pas quand Kubernetes envoie `SIGTERM` ?
 - [ ] Kubernetes envoie `SIGKILL`
@@ -187,6 +195,7 @@ Utile pour le *strategy pattern* dynamique ; à éviter comme *service locator* 
 - [ ] Il faut les déclarer `async`
 > Par défaut Nest n'écoute pas les signaux (cela consomme des listeners). Sans `enableShutdownHooks()`, les connexions DB et les jobs en cours ne sont pas fermés proprement lors d'un déploiement : c'est le *graceful shutdown*.
 [doc]: NestJS — Application shutdown (EN) | https://docs.nestjs.com/fundamentals/lifecycle-events#application-shutdown
+[doc]: NestJS — Application shutdown (FR) | https://docs.nest-js.fr/fundamentals/lifecycle-events
 
 ### Dans quel ordre sont appelés ces hooks au démarrage ?
 - [ ] `onApplicationBootstrap` puis `onModuleInit`
@@ -195,6 +204,7 @@ Utile pour le *strategy pattern* dynamique ; à éviter comme *service locator* 
 - [ ] Uniquement `onModuleInit`
 > `onModuleInit` est appelé quand les dépendances du module sont résolues ; `onApplicationBootstrap` quand **tous** les modules sont initialisés, juste avant d'écouter les connexions.
 [doc]: NestJS — Lifecycle events (EN) | https://docs.nestjs.com/fundamentals/lifecycle-events
+[doc]: NestJS — Lifecycle events (FR) | https://docs.nest-js.fr/fundamentals/lifecycle-events
 
 ### Quel risque y a-t-il à stocker `this.currentUser = req.user` dans un service par défaut ?
 - [ ] Aucun
@@ -203,6 +213,7 @@ Utile pour le *strategy pattern* dynamique ; à éviter comme *service locator* 
 - [ ] Nest interdit les propriétés mutables
 > Fuite de données entre utilisateurs : faille de sécurité grave. Le contexte de requête se passe en paramètre, via un provider REQUEST, ou via `AsyncLocalStorage`.
 [doc]: NestJS — Injection scopes (EN) | https://docs.nestjs.com/fundamentals/injection-scopes
+[doc]: NestJS — Injection scopes (FR) | https://docs.nest-js.fr/fundamentals/injection-scopes
 
 ### Que fait `@Global()` sur un module ?
 - [ ] Il rend tous ses providers accessibles sans les exporter
@@ -211,6 +222,7 @@ Utile pour le *strategy pattern* dynamique ; à éviter comme *service locator* 
 - [ ] Il le charge avant tous les autres
 > Il faut toujours exporter les providers. `@Global()` évite seulement les imports répétés : à réserver à des briques transverses, sinon on perd la lisibilité des dépendances.
 [doc]: NestJS — Global modules (EN) | https://docs.nestjs.com/modules#global-modules
+[doc]: NestJS — Global modules (FR) | https://docs.nest-js.fr/modules
 
 ### Comment obtenir dynamiquement une instance d'un provider request-scoped depuis `ModuleRef` ?
 - [ ] `moduleRef.get(Service)`
@@ -219,6 +231,7 @@ Utile pour le *strategy pattern* dynamique ; à éviter comme *service locator* 
 - [ ] `new Service()`
 > `get()` ne fonctionne que pour les providers statiques (singletons). `resolve()` est asynchrone et crée/retourne l'instance d'un sous-arbre REQUEST ou TRANSIENT.
 [doc]: NestJS — Module reference (EN) | https://docs.nestjs.com/fundamentals/module-ref
+[doc]: NestJS — Module reference (FR) | https://docs.nest-js.fr/fundamentals/module-ref
 
 ### Quelles affirmations sur les controllers NestJS sont vraies ? (plusieurs réponses)
 - [x] Ils doivent rester fins : la logique métier va dans des providers
@@ -227,6 +240,7 @@ Utile pour le *strategy pattern* dynamique ; à éviter comme *service locator* 
 - [ ] Ils sont request-scoped par défaut
 > Les controllers ne sont pas des providers : on ne les injecte pas ailleurs. Ils sont singletons par défaut (sauf si une dépendance est request-scoped).
 [doc]: NestJS — Controllers (EN) | https://docs.nestjs.com/controllers
+[doc]: NestJS — Controllers (FR) | https://docs.nest-js.fr/controllers
 
 ### Quel provider est le plus adapté pour injecter un objet de configuration constant ou un faux service dans un test ?
 - [ ] `useClass`
@@ -235,6 +249,7 @@ Utile pour le *strategy pattern* dynamique ; à éviter comme *service locator* 
 - [ ] `useExisting`
 > `{ provide: 'APP_OPTIONS', useValue: { region: 'eu' } }` enregistre une valeur déjà construite. C'est aussi le moyen le plus simple de remplacer un service par un double de test.
 [doc]: NestJS — Value providers (EN) | https://docs.nestjs.com/fundamentals/custom-providers#value-providers-usevalue
+[doc]: NestJS — Value providers (FR) | https://docs.nest-js.fr/fundamentals/custom-providers
 
 ### Comment injecter un provider enregistré avec un token chaîne ou `Symbol` ?
 - [ ] `constructor(private client: 'REDIS_CLIENT')`
@@ -243,6 +258,7 @@ Utile pour le *strategy pattern* dynamique ; à éviter comme *service locator* 
 - [ ] Il suffit de typer le paramètre avec `Redis`
 > Sans classe comme token, les métadonnées de type ne suffisent pas (et un type comme `Redis` peut être une interface, effacée à la compilation). `@Inject(token)` indique explicitement la clé à résoudre.
 [doc]: NestJS — Non-class-based provider tokens (EN) | https://docs.nestjs.com/fundamentals/custom-providers#non-class-based-provider-tokens
+[doc]: NestJS — Non-class-based provider tokens (FR) | https://docs.nest-js.fr/fundamentals/custom-providers
 
 ### Que fait `@Optional()` sur un paramètre du constructeur ?
 - [ ] Il rend le provider facultatif dans `providers`
@@ -251,6 +267,7 @@ Utile pour le *strategy pattern* dynamique ; à éviter comme *service locator* 
 - [ ] Il marque la dépendance comme request-scoped
 > Utile pour une dépendance réellement facultative (ex. un objet d'options avec valeurs par défaut). À utiliser avec parcimonie : un oubli d'import dans un module devient alors silencieux.
 [doc]: NestJS — Optional providers (EN) | https://docs.nestjs.com/providers#optional-providers
+[doc]: NestJS — Optional providers (FR) | https://docs.nest-js.fr/providers
 
 ### `UsersService` est déclaré dans le tableau `providers` de `UsersModule` **et** de `OrdersModule`. Que se passe-t-il ?
 - [ ] Nest lève une erreur de doublon
@@ -259,6 +276,7 @@ Utile pour le *strategy pattern* dynamique ; à éviter comme *service locator* 
 - [ ] Le second module écrase le premier
 > Un singleton l'est **par module qui le déclare**. Redéclarer un service ailleurs crée une seconde instance (et un second cache, une seconde connexion…). La bonne pratique : le déclarer et l'exporter dans un seul module, puis importer ce module.
 [doc]: NestJS — Shared modules (EN) | https://docs.nestjs.com/modules#shared-modules
+[doc]: NestJS — Shared modules (FR) | https://docs.nest-js.fr/modules
 
 ### Que permet le scope `Scope.TRANSIENT` ?
 - [ ] Une instance par requête HTTP
@@ -267,6 +285,7 @@ Utile pour le *strategy pattern* dynamique ; à éviter comme *service locator* 
 - [ ] Une instance détruite après chaque appel de méthode
 > Un provider transient n'est pas partagé : chaque classe qui l'injecte reçoit sa propre instance. Cas typique : un logger qui mémorise le contexte (`setContext('OrdersService')`) propre à son consommateur.
 [doc]: NestJS — Injection scopes (EN) | https://docs.nestjs.com/fundamentals/injection-scopes
+[doc]: NestJS — Injection scopes (FR) | https://docs.nest-js.fr/fundamentals/injection-scopes
 
 ### Quelle est la différence entre `TypeOrmModule.forRoot()` et `TypeOrmModule.forFeature([User])` ?
 - [ ] `forFeature` crée une seconde connexion à la base
@@ -275,6 +294,7 @@ Utile pour le *strategy pattern* dynamique ; à éviter comme *service locator* 
 - [ ] Il n'y a pas de différence
 > Convention des modules dynamiques : `forRoot` (configuration globale, une fois, dans `AppModule`) et `forFeature` (ce dont un module métier a besoin). Les modules de la communauté suivent le même schéma (`BullModule.registerQueue`, `JwtModule.register`…).
 [doc]: NestJS — Database / repository pattern (EN) | https://docs.nestjs.com/techniques/database#repository-pattern
+[doc]: NestJS — Database / repository pattern (FR) | https://docs.nest-js.fr/techniques/database
 
 ### Comment choisir l'implémentation d'un port `MAILER` selon l'environnement ?
 - [ ] Avec un `if` dans chaque service qui envoie des emails
@@ -283,6 +303,7 @@ Utile pour le *strategy pattern* dynamique ; à éviter comme *service locator* 
 - [ ] En déclarant les deux classes dans `providers`
 > Le choix de l'implémentation est centralisé dans la configuration du module ; le code métier dépend seulement du token. Pour une logique plus riche (lecture de `ConfigService`), on passe à `useFactory` avec `inject`.
 [doc]: NestJS — Class providers (EN) | https://docs.nestjs.com/fundamentals/custom-providers#class-providers-useclass
+[doc]: NestJS — Class providers (FR) | https://docs.nest-js.fr/fundamentals/custom-providers
 
 ### Un module peut-il réexporter un module qu'il importe ?
 - [ ] Non, seuls les providers peuvent être exportés
@@ -291,3 +312,4 @@ Utile pour le *strategy pattern* dynamique ; à éviter comme *service locator* 
 - [ ] Non, cela crée une dépendance circulaire
 > Le réexport permet de créer un module « façade » (ex. `CoreModule` qui réexporte `ConfigModule`, `LoggerModule`…). À garder simple : trop de réexports rendent les dépendances difficiles à suivre.
 [doc]: NestJS — Module re-exporting (EN) | https://docs.nestjs.com/modules#module-re-exporting
+[doc]: NestJS — Module re-exporting (FR) | https://docs.nest-js.fr/modules

@@ -131,6 +131,7 @@ export class UsersResolver {
 - [ ] `@MessagePattern` est synchrone
 > Côté client : `client.send()` (attend une réponse, retourne un Observable) vs `client.emit()` (fire-and-forget). Préférer les événements pour découpler les services.
 [doc]: NestJS — Microservices, event-based (EN) | https://docs.nestjs.com/microservices/basics#event-based
+[doc]: NestJS — Microservices, event-based (FR) | https://docs.nest-js.fr/microservices/basics
 
 ### Pourquoi préférer une queue BullMQ à `@nestjs/event-emitter` pour envoyer un email de confirmation de commande ?
 - [ ] EventEmitter ne supporte pas l'asynchrone
@@ -139,6 +140,7 @@ export class UsersResolver {
 - [ ] EventEmitter ne fonctionne pas avec NestJS
 > Un événement en mémoire est perdu si le process s'arrête. Pour tout effet qui doit **forcément** se produire, une queue durable (ou le pattern outbox) est nécessaire.
 [doc]: NestJS — Queues (EN) | https://docs.nestjs.com/techniques/queues
+[doc]: NestJS — Queues (FR) | https://docs.nest-js.fr/techniques/queues
 
 ### Pourquoi un job de queue doit-il être idempotent ?
 - [ ] Pour qu'il soit plus rapide
@@ -155,6 +157,7 @@ export class UsersResolver {
 - [ ] Uniquement avec MongoDB
 > CQRS ajoute de l'indirection (commandes, handlers, buses). Sur un CRUD, c'est de la complexité sans bénéfice ; sur un domaine riche, il clarifie les cas d'usage et facilite l'*event sourcing*.
 [doc]: NestJS — CQRS (EN) | https://docs.nestjs.com/recipes/cqrs
+[doc]: NestJS — CQRS (FR) | https://docs.nest-js.fr/recipes/cqrs
 
 ### Une app WebSocket Socket.IO tourne sur 3 instances derrière un load balancer. Un `server.emit` n'atteint qu'une partie des clients. Pourquoi ?
 - [ ] Socket.IO ne supporte pas `emit`
@@ -163,6 +166,7 @@ export class UsersResolver {
 - [ ] Il faut utiliser `broadcast` au lieu d'`emit`
 > L'adapter Redis (pub/sub) relaie les émissions à toutes les instances. Il faut aussi des *sticky sessions* si le polling HTTP de Socket.IO est utilisé.
 [doc]: NestJS — WebSockets adapters, Redis (EN) | https://docs.nestjs.com/websockets/adapter#extend-socketio
+[doc]: NestJS — WebSockets adapters, Redis (FR) | https://docs.nest-js.fr/websockets/adapter
 
 ### À quoi servent les endpoints `/health/live` et `/health/ready` ?
 - [ ] À afficher la documentation
@@ -171,6 +175,7 @@ export class UsersResolver {
 - [ ] À vérifier la version de Node
 > Ne pas mettre de dépendances externes dans la liveness : une panne de base ferait redémarrer en boucle tous les pods. `@nestjs/terminus` fournit les indicateurs (TypeORM, Prisma, HTTP, mémoire, disque).
 [doc]: NestJS — Health checks (Terminus) (EN) | https://docs.nestjs.com/recipes/terminus
+[doc]: NestJS — Health checks (Terminus) (FR) | https://docs.nest-js.fr/recipes/terminus
 
 ### Pourquoi valider les variables d'environnement au démarrage ?
 - [ ] Pour accélérer le démarrage
@@ -179,6 +184,7 @@ export class UsersResolver {
 - [ ] Pour chiffrer les secrets
 > `ConfigModule.forRoot({ validate })` ou `validationSchema` vérifient types et présence. Un déploiement mal configuré ne passe alors même pas la readiness.
 [doc]: NestJS — Configuration, schema validation (EN) | https://docs.nestjs.com/techniques/configuration#schema-validation
+[doc]: NestJS — Configuration, schema validation (FR) | https://docs.nest-js.fr/techniques/configuration
 
 ### Pourquoi utiliser des logs structurés (JSON) en production ?
 - [ ] Ils sont plus lisibles dans un terminal
@@ -187,6 +193,7 @@ export class UsersResolver {
 - [ ] Node l'impose
 > Avec un *correlation id* propagé (header `x-request-id`, AsyncLocalStorage), on suit une requête à travers tous les services. `nestjs-pino` est très performant.
 [doc]: NestJS — Logger (EN) | https://docs.nestjs.com/techniques/logger
+[doc]: NestJS — Logger (FR) | https://docs.nest-js.fr/techniques/logger
 
 ### Comment éviter le N+1 dans un resolver GraphQL `@ResolveField() orders(@Parent() user)` appelé pour 50 utilisateurs ?
 - [ ] Mettre le resolver en cache global
@@ -195,6 +202,7 @@ export class UsersResolver {
 - [ ] GraphQL résout le problème automatiquement
 > Le DataLoader collecte les clés demandées pendant un tick puis appelle une fonction de batch unique. Il doit être créé **par requête** pour ne pas partager le cache entre utilisateurs.
 [doc]: NestJS — GraphQL resolvers (EN) | https://docs.nestjs.com/graphql/resolvers
+[doc]: NestJS — GraphQL resolvers (FR) | https://docs.nest-js.fr/graphql/resolvers
 
 ### Quel est l'intérêt de `FastifyAdapter` ?
 - [ ] Il ajoute GraphQL
@@ -203,6 +211,7 @@ export class UsersResolver {
 - [ ] Il est obligatoire en production
 > `NestFactory.create<NestFastifyApplication>(AppModule, new FastifyAdapter())`. Le code Nest reste le même tant qu'on n'utilise pas directement les objets `req`/`res` d'Express.
 [doc]: NestJS — Performance (Fastify) (EN) | https://docs.nestjs.com/techniques/performance
+[doc]: NestJS — Performance (Fastify) (FR) | https://docs.nest-js.fr/techniques/performance
 
 ### Comment versionner une API REST NestJS par l'URL (`/v1/users`, `/v2/users`) ?
 - [ ] Créer deux applications Nest
@@ -211,6 +220,7 @@ export class UsersResolver {
 - [ ] Ce n'est pas supporté
 > Nest supporte le versioning par URI, header, media type ou une fonction personnalisée. Une version par défaut évite de casser les clients existants.
 [doc]: NestJS — Versioning (EN) | https://docs.nestjs.com/techniques/versioning
+[doc]: NestJS — Versioning (FR) | https://docs.nest-js.fr/techniques/versioning
 
 ### Que doit faire une application lors d'un `SIGTERM` envoyé pendant un déploiement ?
 - [ ] S'arrêter immédiatement
@@ -219,6 +229,7 @@ export class UsersResolver {
 - [ ] Redémarrer
 > C'est le *graceful shutdown*. Sans lui : requêtes coupées, jobs interrompus, transactions abandonnées. Kubernetes laisse `terminationGracePeriodSeconds` (30 s par défaut) avant le `SIGKILL`.
 [doc]: NestJS — Lifecycle events, application shutdown (EN) | https://docs.nestjs.com/fundamentals/lifecycle-events#application-shutdown
+[doc]: NestJS — Lifecycle events, application shutdown (FR) | https://docs.nest-js.fr/fundamentals/lifecycle-events
 
 ### Comment planifier une tâche quotidienne à 3 h du matin dans NestJS ?
 - [ ] `setInterval` dans le constructeur d'un service
@@ -227,6 +238,7 @@ export class UsersResolver {
 - [ ] Ce n'est pas possible
 > Attention : avec N instances, un `@Cron` s'exécute N fois. Pour une exécution unique, utiliser un verrou distribué ou un job répétable BullMQ (dédupliqué par Redis).
 [doc]: NestJS — Task scheduling (EN) | https://docs.nestjs.com/techniques/task-scheduling
+[doc]: NestJS — Task scheduling (FR) | https://docs.nest-js.fr/techniques/task-scheduling
 
 ### Quels traitements devraient être déportés dans une queue plutôt qu'exécutés pendant la requête HTTP ? (plusieurs réponses)
 - [x] La génération d'un PDF de 200 pages
@@ -235,6 +247,7 @@ export class UsersResolver {
 - [ ] La lecture d'un utilisateur par son id
 > Tout ce qui est lent, faillible ou dépendant d'un tiers gagne à être asynchrone : la requête renvoie vite (202 Accepted + id de job) et le traitement bénéficie de retries.
 [doc]: NestJS — Queues (EN) | https://docs.nestjs.com/techniques/queues
+[doc]: NestJS — Queues (FR) | https://docs.nest-js.fr/techniques/queues
 
 ### `configService.get<number>('PORT')` renvoie-t-il un nombre ?
 - [ ] Oui, le générique convertit la valeur
@@ -243,6 +256,7 @@ export class UsersResolver {
 - [ ] Non, il renvoie toujours `undefined`
 > Le paramètre de type est une simple **assertion**. Pour obtenir un vrai nombre, il faut transformer à la validation (Joi `Joi.number()`, Zod `z.coerce.number()`) ou dans une fonction `registerAs`.
 [doc]: NestJS — Configuration (EN) | https://docs.nestjs.com/techniques/configuration#using-the-configservice
+[doc]: NestJS — Configuration (FR) | https://docs.nest-js.fr/techniques/configuration
 
 ### Comment propager un identifiant de corrélation dans tous les logs d'une requête sans passer en scope `REQUEST` ?
 - [ ] Une variable globale
@@ -251,6 +265,7 @@ export class UsersResolver {
 - [ ] Un cookie
 > `AsyncLocalStorage` conserve un contexte à travers les `await` d'une même requête, sans recréer les providers à chaque requête (ce que fait le scope `REQUEST`). Les loggers comme pino peuvent ensuite l'ajouter à chaque ligne.
 [doc]: NestJS — Async Local Storage (EN) | https://docs.nestjs.com/recipes/async-local-storage
+[doc]: NestJS — Async Local Storage (FR) | https://docs.nest-js.fr/recipes/async-local-storage
 
 ### Comment pousser des notifications du serveur vers le navigateur sans WebSocket, sur une connexion HTTP simple ?
 - [ ] Avec du long polling uniquement
@@ -259,6 +274,7 @@ export class UsersResolver {
 - [ ] C'est impossible en HTTP
 > Les SSE sont unidirectionnels (serveur → client), passent par HTTP standard, et le navigateur se reconnecte automatiquement (`EventSource`). Suffisant pour des notifications ou une progression ; WebSocket reste utile pour des échanges bidirectionnels.
 [doc]: NestJS — Server-Sent Events (EN) | https://docs.nestjs.com/techniques/server-sent-events
+[doc]: NestJS — Server-Sent Events (FR) | https://docs.nest-js.fr/techniques/server-sent-events
 
 ### Quelles réponses le `CacheInterceptor` de Nest met-il en cache par défaut ?
 - [ ] Toutes les requêtes
@@ -267,6 +283,7 @@ export class UsersResolver {
 - [ ] Aucune, il faut configurer chaque route
 > Mettre en cache une mutation n'aurait pas de sens. La clé par défaut est l'URL : attention aux réponses personnalisées par utilisateur, qu'il faut exclure ou dont il faut adapter la clé (`trackBy`).
 [doc]: NestJS — Caching (EN) | https://docs.nestjs.com/techniques/caching
+[doc]: NestJS — Caching (FR) | https://docs.nest-js.fr/techniques/caching
 
 ### L'API tourne sur 4 instances avec `@nestjs/throttler` à 10 requêtes/minute. Un client peut-il faire 40 requêtes par minute ?
 - [ ] Non, la limite est partagée automatiquement
@@ -275,6 +292,7 @@ export class UsersResolver {
 - [ ] Oui, mais seulement en HTTP/2
 > Tout état en mémoire est local à une instance. Pour un rate limiting cohérent, le throttler doit utiliser un stockage commun — ou la limite est appliquée en amont (API gateway, reverse proxy).
 [doc]: NestJS — Rate limiting, storages (EN) | https://docs.nestjs.com/security/rate-limiting#storages
+[doc]: NestJS — Rate limiting, storages (FR) | https://docs.nest-js.fr/security/rate-limiting
 
 ### Pourquoi le SDK OpenTelemetry doit-il être initialisé avant d'importer le reste de l'application ?
 - [ ] Pour lire les variables d'environnement
@@ -299,3 +317,4 @@ export class UsersResolver {
 - [ ] Il n'y a aucune différence
 > Code first garde une seule source de vérité dans le code TypeScript (proche des DTO). Schema first convient quand le schéma GraphQL est le contrat partagé avec d'autres équipes.
 [doc]: NestJS — GraphQL quick start (EN) | https://docs.nestjs.com/graphql/quick-start
+[doc]: NestJS — GraphQL quick start (FR) | https://docs.nest-js.fr/graphql/quick-start

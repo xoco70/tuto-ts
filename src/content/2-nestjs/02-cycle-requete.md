@@ -144,6 +144,7 @@ export function Auth(...roles: Role[]) {
 - [ ] Middleware → Pipes → Guards → Interceptors
 > Moyen mnémotechnique : **M-G-I-P**. Les interceptors s'exécutent aussi *après* le handler (en ordre inverse) grâce à RxJS, et les exception filters interviennent en cas d'erreur.
 [doc]: NestJS — Request lifecycle (EN) | https://docs.nestjs.com/faq/request-lifecycle
+[doc]: NestJS — Request lifecycle (FR) | https://docs.nest-js.fr/faq/request-lifecycle
 
 ### Pourquoi implémenter un contrôle de rôles dans un guard plutôt qu'un middleware ?
 - [ ] Les middlewares ne peuvent pas lire les headers
@@ -152,6 +153,7 @@ export function Auth(...roles: Role[]) {
 - [ ] Les guards sont plus rapides
 > Un middleware ne sait pas quelle route sera appelée (il s'exécute avant le routage Nest). Un guard reçoit `context.getHandler()` et `context.getClass()`, indispensables pour lire les métadonnées via `Reflector`.
 [doc]: NestJS — Guards (EN) | https://docs.nestjs.com/guards
+[doc]: NestJS — Guards (FR) | https://docs.nest-js.fr/guards
 
 ### Qu'arrive-t-il si un guard retourne `false` ?
 - [ ] La requête passe quand même au handler
@@ -160,6 +162,7 @@ export function Auth(...roles: Role[]) {
 - [ ] Nest renvoie 404
 > Par défaut un guard qui refuse produit un 403. Pour un 401 (non authentifié), le guard doit lever lui-même une `UnauthorizedException` — c'est ce que fait `AuthGuard('jwt')` de `@nestjs/passport`.
 [doc]: NestJS — Guards, putting it all together (EN) | https://docs.nestjs.com/guards#putting-it-all-together
+[doc]: NestJS — Guards, putting it all together (FR) | https://docs.nest-js.fr/guards
 
 ### Pourquoi préférer `{ provide: APP_GUARD, useClass: JwtAuthGuard }` à `app.useGlobalGuards(new JwtAuthGuard())` ?
 - [ ] `useGlobalGuards` n'existe pas
@@ -168,6 +171,7 @@ export function Auth(...roles: Role[]) {
 - [ ] `useGlobalGuards` désactive les autres guards
 > Un objet créé avec `new` dans `main.ts` vit hors du conteneur DI. Les tokens `APP_GUARD`, `APP_PIPE`, `APP_INTERCEPTOR`, `APP_FILTER` enregistrent un provider global avec injection. Ils s'appliquent à toute l'app quel que soit le module où ils sont déclarés.
 [doc]: NestJS — Binding guards (EN) | https://docs.nestjs.com/guards#binding-guards
+[doc]: NestJS — Binding guards (FR) | https://docs.nest-js.fr/guards
 
 ### Que renvoie Nest si un service lève `new Error('boom')` sans filtre personnalisé ?
 - [ ] 400 avec le message `boom`
@@ -176,6 +180,7 @@ export function Auth(...roles: Role[]) {
 - [ ] 200 avec un body vide
 > Le filtre global intégré convertit toute exception non-`HttpException` en 500 générique, sans divulguer le message (bonne pratique de sécurité). Pour un 404 métier : `throw new NotFoundException()`, ou un filtre qui mappe vos erreurs de domaine.
 [doc]: NestJS — Exception filters (EN) | https://docs.nestjs.com/exception-filters
+[doc]: NestJS — Exception filters (FR) | https://docs.nest-js.fr/exception-filters
 
 ### Que se passe-t-il avec `@Param('id', ParseIntPipe) id: number` si on appelle `/users/abc` ?
 - [ ] `id` vaut `NaN`
@@ -184,6 +189,7 @@ export function Auth(...roles: Role[]) {
 - [ ] Nest renvoie 404
 > Les pipes s'exécutent avant le handler : une conversion impossible lève une exception. Sans pipe, `id` serait la chaîne `'abc'` malgré l'annotation `number` (les types ne convertissent rien).
 [doc]: NestJS — Pipes, built-in pipes (EN) | https://docs.nestjs.com/pipes#built-in-pipes
+[doc]: NestJS — Pipes, built-in pipes (FR) | https://docs.nest-js.fr/pipes
 
 ### Quel est l'outil adapté pour envelopper toutes les réponses dans `{ data: ... }` et mesurer leur durée ?
 - [ ] Un guard
@@ -192,6 +198,7 @@ export function Auth(...roles: Role[]) {
 - [ ] Un middleware
 > L'interceptor encadre l'exécution du handler et manipule le flux de réponse via RxJS (`next.handle().pipe(map(...))`). Le middleware ne voit pas la valeur retournée par le handler.
 [doc]: NestJS — Interceptors (EN) | https://docs.nestjs.com/interceptors
+[doc]: NestJS — Interceptors (FR) | https://docs.nest-js.fr/interceptors
 
 ### Que fait un interceptor qui retourne `of(cached)` sans appeler `next.handle()` ?
 - [ ] Erreur : `next.handle()` est obligatoire
@@ -200,6 +207,7 @@ export function Auth(...roles: Role[]) {
 - [ ] Il renvoie une réponse vide
 > C'est le principe du `CacheInterceptor`. Sans `next.handle()`, ni le handler ni les pipes ne s'exécutent.
 [doc]: NestJS — Interceptors, response mapping (EN) | https://docs.nestjs.com/interceptors#stream-overriding
+[doc]: NestJS — Interceptors, response mapping (FR) | https://docs.nest-js.fr/interceptors
 
 ### Que retourne `reflector.getAllAndOverride(ROLES_KEY, [context.getHandler(), context.getClass()])` ?
 - [ ] La fusion des rôles de la méthode et du controller
@@ -208,6 +216,7 @@ export function Auth(...roles: Role[]) {
 - [ ] Un tableau de tableaux
 > `getAllAndOverride` prend la **première** valeur définie dans l'ordre des cibles : la méthode surcharge le controller. `getAllAndMerge` fusionnerait les deux.
 [doc]: NestJS — Execution context, Reflection and metadata (EN) | https://docs.nestjs.com/fundamentals/execution-context#reflection-and-metadata
+[doc]: NestJS — Execution context, Reflection and metadata (FR) | https://docs.nest-js.fr/fundamentals/execution-context
 
 ### Comment créer un décorateur `@CurrentUser()` qui injecte `req.user` dans un paramètre de handler ?
 - [ ] `SetMetadata('user', req.user)`
@@ -216,6 +225,7 @@ export function Auth(...roles: Role[]) {
 - [ ] `@Inject(REQUEST)` dans le controller
 > `createParamDecorator` reçoit l'argument passé au décorateur (`data`) et le contexte. Les décorateurs de paramètres personnalisés peuvent aussi recevoir des pipes : `@CurrentUser(new ValidationPipe())`.
 [doc]: NestJS — Custom route decorators (EN) | https://docs.nestjs.com/custom-decorators
+[doc]: NestJS — Custom route decorators (FR) | https://docs.nest-js.fr/custom-decorators
 
 ### À quoi sert `applyDecorators` ?
 - [ ] À appliquer un décorateur à toutes les routes
@@ -224,6 +234,7 @@ export function Auth(...roles: Role[]) {
 - [ ] À créer un décorateur de paramètre
 > Réduit la répétition et centralise la politique de sécurité : un seul décorateur à apposer, impossible d'oublier un guard.
 [doc]: NestJS — Decorator composition (EN) | https://docs.nestjs.com/custom-decorators#decorator-composition
+[doc]: NestJS — Decorator composition (FR) | https://docs.nest-js.fr/custom-decorators
 
 ### Un filtre est défini au niveau route et un autre en global, tous deux capables de traiter l'exception. Lequel la gère ?
 - [ ] Le global
@@ -232,6 +243,7 @@ export function Auth(...roles: Role[]) {
 - [ ] Celui déclaré en dernier
 > Les filtres sont résolus du plus spécifique au plus général (route → controller → global), et le premier qui correspond (`@Catch(...)`) gère l'exception. Les filtres ne se chaînent pas.
 [doc]: NestJS — Binding filters (EN) | https://docs.nestjs.com/exception-filters#binding-filters
+[doc]: NestJS — Binding filters (FR) | https://docs.nest-js.fr/exception-filters
 
 ### Comment un guard récupère-t-il l'objet requête quelle que soit l'origine (HTTP, WebSocket, microservice) ?
 - [ ] Via `@Req()`
@@ -240,6 +252,7 @@ export function Auth(...roles: Role[]) {
 - [ ] Ce n'est pas possible : les guards sont HTTP uniquement
 > `ExecutionContext` (qui étend `ArgumentsHost`) rend guards, interceptors et filtres **agnostiques du transport**. Pour GraphQL : `GqlExecutionContext.create(context)`.
 [doc]: NestJS — Execution context (EN) | https://docs.nestjs.com/fundamentals/execution-context
+[doc]: NestJS — Execution context (FR) | https://docs.nest-js.fr/fundamentals/execution-context
 
 ### Quelles tâches relèvent typiquement d'un interceptor ? (plusieurs réponses)
 - [x] Mettre en cache une réponse
@@ -248,6 +261,7 @@ export function Auth(...roles: Role[]) {
 - [ ] Valider le body de la requête avec class-validator
 > Les interceptors gèrent la logique transverse autour de l'appel (cache, logs, timeout, mapping de réponse ou d'erreurs). La validation des arguments est le rôle des **pipes**.
 [doc]: NestJS — Interceptors (EN) | https://docs.nestjs.com/interceptors
+[doc]: NestJS — Interceptors (FR) | https://docs.nest-js.fr/interceptors
 
 ### Que renvoie Nest quand un service lève `new NotFoundException('Commande introuvable')` ?
 - [ ] Une 500 avec le message
@@ -256,6 +270,7 @@ export function Auth(...roles: Role[]) {
 - [ ] Une 200 avec `{ error: … }`
 > Les exceptions HTTP intégrées (`BadRequestException`, `ForbiddenException`, `ConflictException`…) sont traitées par le filtre global par défaut. Dans une architecture propre, le domaine lève plutôt ses propres erreurs, traduites en HTTP par un filtre.
 [doc]: NestJS — Built-in HTTP exceptions (EN) | https://docs.nestjs.com/exception-filters#built-in-http-exceptions
+[doc]: NestJS — Built-in HTTP exceptions (FR) | https://docs.nest-js.fr/exception-filters
 
 ### Un handler injecte `@Res() res: Response` pour ajouter un cookie. Pourquoi la réponse ne part-elle plus ?
 - [ ] Les cookies sont interdits dans Nest
@@ -264,6 +279,7 @@ export function Auth(...roles: Role[]) {
 - [ ] Un interceptor bloque la réponse
 > Injecter l'objet réponse natif désactive la gestion standard (sérialisation, interceptors de mapping…). `passthrough: true` permet de manipuler `res` tout en laissant Nest envoyer la valeur retournée.
 [doc]: NestJS — Library-specific approach (EN) | https://docs.nestjs.com/controllers#library-specific-approach
+[doc]: NestJS — Library-specific approach (FR) | https://docs.nest-js.fr/controllers
 
 ### Comment faire renvoyer `204 No Content` à un `DELETE` ?
 - [ ] `return null;`
@@ -272,6 +288,7 @@ export function Auth(...roles: Role[]) {
 - [ ] C'est le comportement par défaut d'un `@Delete()`
 > Par défaut, Nest renvoie 200 (201 pour `@Post()`). `@HttpCode()` change le statut ; pour un statut dynamique, on passe par `@Res({ passthrough: true })` ou une exception.
 [doc]: NestJS — Status code (EN) | https://docs.nestjs.com/controllers#status-code
+[doc]: NestJS — Status code (FR) | https://docs.nest-js.fr/controllers
 
 ### Comment appliquer un middleware de journalisation aux routes `orders` ?
 - [ ] `@UseMiddleware(LoggerMiddleware)` sur le controller
@@ -280,6 +297,7 @@ export function Auth(...roles: Role[]) {
 - [ ] `app.useGlobalInterceptors(LoggerMiddleware)`
 > Les middlewares ne s'appliquent pas par décorateur mais via le `MiddlewareConsumer` du module, avec `forRoutes` et `exclude`. Ils s'exécutent avant les guards et n'ont pas accès à l'`ExecutionContext`.
 [doc]: NestJS — Applying middleware (EN) | https://docs.nestjs.com/middleware#applying-middleware
+[doc]: NestJS — Applying middleware (FR) | https://docs.nest-js.fr/middleware
 
 ### Trois interceptors sont liés : un global, un sur le controller et un sur la route. Dans quel ordre traitent-ils la réponse (après `next.handle()`) ?
 - [ ] Global → controller → route
@@ -288,6 +306,7 @@ export function Auth(...roles: Role[]) {
 - [ ] Seul l'interceptor de route traite la réponse
 > À l'entrée : global → controller → route. Les interceptors enveloppent le handler comme des oignons, donc la réponse remonte dans l'ordre **inverse**. C'est important quand l'un enveloppe la réponse et qu'un autre la mesure.
 [doc]: NestJS — Request lifecycle (EN) | https://docs.nestjs.com/faq/request-lifecycle
+[doc]: NestJS — Request lifecycle (FR) | https://docs.nest-js.fr/faq/request-lifecycle
 
 ### Comment lire `?page=` avec `1` comme valeur par défaut et un entier garanti ?
 - [ ] `@Query('page') page = 1`
@@ -296,6 +315,7 @@ export function Auth(...roles: Role[]) {
 - [ ] `@Query({ page: 1 }) page: number`
 > Les pipes s'appliquent dans l'ordre : `DefaultValuePipe` remplace `undefined` par `1`, puis `ParseIntPipe` convertit et valide. Dans l'ordre inverse, `ParseIntPipe` rejetterait l'absence de valeur.
 [doc]: NestJS — Providing defaults (EN) | https://docs.nestjs.com/pipes#providing-defaults
+[doc]: NestJS — Providing defaults (FR) | https://docs.nest-js.fr/pipes
 
 ### Que capture un filtre déclaré avec `@Catch()` sans argument ?
 - [ ] Uniquement les `HttpException`
@@ -304,6 +324,7 @@ export function Auth(...roles: Role[]) {
 - [ ] Uniquement les erreurs non gérées de Node
 > Un filtre « catch-all » sert à normaliser toutes les erreurs (format RFC 9457, log avec correlation id, masquage des détails internes). Utilisez `HttpAdapterHost` pour rester indépendant d'Express ou Fastify.
 [doc]: NestJS — Catch everything (EN) | https://docs.nestjs.com/exception-filters#catch-everything
+[doc]: NestJS — Catch everything (FR) | https://docs.nest-js.fr/exception-filters
 
 ### Un guard lève `new UnauthorizedException()` au lieu de retourner `false`. Quelle différence côté client ?
 - [ ] Aucune
@@ -312,3 +333,4 @@ export function Auth(...roles: Role[]) {
 - [ ] Le handler est quand même exécuté
 > Retourner `false` déclenche une `ForbiddenException` (403). Pour une absence d'authentification, lever explicitement `UnauthorizedException` (401) est plus juste — c'est ce que fait `AuthGuard('jwt')` de Passport.
 [doc]: NestJS — Guards (EN) | https://docs.nestjs.com/guards
+[doc]: NestJS — Guards (FR) | https://docs.nest-js.fr/guards

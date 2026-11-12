@@ -229,6 +229,7 @@ type User = z.infer<typeof UserSchema>;
 - [ ] Les arguments passés entre deux fonctions internes typées
 > Tout ce qui franchit une **frontière** du système (réseau, env, fichiers, stockage, librairies non typées) doit être validé. À l'intérieur, le compilateur suffit. En NestJS, `ConfigModule` + un schéma (Joi/Zod) valide l'env au démarrage.
 [doc]: NestJS — Configuration, schema validation (EN) | https://docs.nestjs.com/techniques/configuration#schema-validation
+[doc]: NestJS — Configuration, schema validation (FR) | https://docs.nest-js.fr/techniques/configuration
 
 ### À quoi sert `esModuleInterop` ?
 - [ ] À convertir automatiquement le projet en ESM

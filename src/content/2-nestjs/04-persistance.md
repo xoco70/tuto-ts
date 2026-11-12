@@ -199,6 +199,7 @@ const user = await prisma.user.findUnique({ where: { id }, select: { email: true
 - [ ] `new Repository(User)`
 > `Repository<User>` est générique : sa métadonnée runtime est juste `Repository`, insuffisant pour distinguer les entités. `@InjectRepository(User)` fournit le bon token, enregistré par `forFeature`.
 [doc]: NestJS — Database, repository pattern (EN) | https://docs.nestjs.com/techniques/database#repository-pattern
+[doc]: NestJS — Database, repository pattern (FR) | https://docs.nest-js.fr/techniques/database
 
 ### Quel est l'intérêt d'un `PrismaService extends PrismaClient` déclaré comme provider ?
 - [ ] Prisma l'exige
@@ -207,6 +208,7 @@ const user = await prisma.user.findUnique({ where: { id }, select: { email: true
 - [ ] Il rend les requêtes synchrones
 > Instancier `new PrismaClient()` dans chaque service multiplierait les pools de connexions et épuiserait la base. Le singleton Nest résout ce problème.
 [doc]: NestJS — Prisma recipe (EN) | https://docs.nestjs.com/recipes/prisma
+[doc]: NestJS — Prisma recipe (FR) | https://docs.nest-js.fr/recipes/prisma
 
 ### Pour des tests d'intégration fiables de la couche de persistance, quelle approche est recommandée ?
 - [ ] Mocker l'ORM entièrement

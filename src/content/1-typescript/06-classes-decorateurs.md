@@ -169,6 +169,7 @@ class UsersService {
 - [ ] Les interfaces doivent être exportées
 > Solutions : un token (`Symbol` ou chaîne) + `@Inject(TOKEN)`, ou une **classe abstraite** comme token (elle existe au runtime). Question très fréquente en entretien NestJS.
 [doc]: NestJS — Custom providers (EN) | https://docs.nestjs.com/fundamentals/custom-providers
+[doc]: NestJS — Custom providers (FR) | https://docs.nest-js.fr/fundamentals/custom-providers
 
 ### Dans quel ordre sont appliqués ces décorateurs ?
 ```ts

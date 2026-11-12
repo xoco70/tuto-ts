@@ -114,6 +114,7 @@ Le **plugin CLI** de `@nestjs/swagger` (dans `nest-cli.json`) infère `@ApiPrope
 - [ ] Les classes sont plus rapides à sérialiser
 > Le `ValidationPipe` lit le type du paramètre (`design:paramtypes`) pour savoir quelle classe instancier puis valider avec class-validator. Avec une interface, la métadonnée est `Object` : aucune validation n'a lieu, silencieusement.
 [doc]: NestJS — Validation (EN) | https://docs.nestjs.com/techniques/validation
+[doc]: NestJS — Validation (FR) | https://docs.nest-js.fr/techniques/validation
 
 ### Quel est l'effet de `whitelist: true` ?
 - [ ] Il n'autorise que certaines IP
@@ -122,6 +123,7 @@ Le **plugin CLI** de `@nestjs/swagger` (dans `nest-cli.json`) infère `@ApiPrope
 - [ ] Il rend toutes les propriétés optionnelles
 > Protection contre l'assignation de masse : un champ `isAdmin` envoyé par le client disparaît s'il n'est pas déclaré dans le DTO. `forbidNonWhitelisted: true` va plus loin et renvoie une 400.
 [doc]: NestJS — Stripping properties (EN) | https://docs.nestjs.com/techniques/validation#stripping-properties
+[doc]: NestJS — Stripping properties (FR) | https://docs.nest-js.fr/techniques/validation
 
 ### Sans `transform: true`, quel est le type réel de `page` ?
 ```ts
@@ -134,6 +136,7 @@ list(@Query('page') page: number) {}
 - [ ] `unknown`
 > Les query params sont toujours des chaînes en HTTP. L'annotation `number` ne convertit rien. Avec `transform: true` (+ type primitif dans la signature), le ValidationPipe convertit ; sinon utilise `ParseIntPipe`.
 [doc]: NestJS — Transform payload objects (EN) | https://docs.nestjs.com/techniques/validation#transform-payload-objects
+[doc]: NestJS — Transform payload objects (FR) | https://docs.nest-js.fr/techniques/validation
 
 ### Un DTO contient `address: AddressDto` décoré avec `@ValidateNested()` seulement. Pourquoi l'adresse n'est-elle pas validée ?
 - [ ] `@ValidateNested` ne fonctionne qu'avec des tableaux
@@ -150,6 +153,7 @@ list(@Query('page') page: number) {}
 - [ ] `PartialType` ne fonctionne qu'avec Swagger
 > `class UpdateUserDto extends PartialType(CreateUserDto) {}` est une vraie classe validable. Les mapped types de `@nestjs/swagger` conservent en plus les métadonnées OpenAPI.
 [doc]: NestJS — Mapped types (EN) | https://docs.nestjs.com/techniques/validation#mapped-types
+[doc]: NestJS — Mapped types (FR) | https://docs.nest-js.fr/techniques/validation
 
 ### Que retourne Nest quand la validation d'un body échoue avec le `ValidationPipe` par défaut ?
 - [ ] 422 Unprocessable Entity
@@ -158,6 +162,7 @@ list(@Query('page') page: number) {}
 - [ ] 200 avec `errors` dans le body
 > Le statut par défaut est 400. On peut le changer (`errorHttpStatusCode: 422`) ou formater les erreurs avec `exceptionFactory`.
 [doc]: NestJS — Validation (EN) | https://docs.nestjs.com/techniques/validation
+[doc]: NestJS — Validation (FR) | https://docs.nest-js.fr/techniques/validation
 
 ### `@Exclude()` est posé sur `password` mais le mot de passe apparaît dans la réponse. Le handler retourne `this.prisma.user.findUnique(...)`. Pourquoi ?
 - [ ] `ClassSerializerInterceptor` ne fonctionne pas avec Prisma
@@ -166,6 +171,7 @@ list(@Query('page') page: number) {}
 - [ ] `@Exclude` ne fonctionne que sur les getters
 > `instanceToPlain` s'appuie sur les décorateurs de la **classe de l'instance**. Il faut retourner `new UserEntity(data)` ou `plainToInstance(UserEntity, data)`. Plus robuste encore : un `select` explicite qui ne lit jamais le mot de passe.
 [doc]: NestJS — Serialization (EN) | https://docs.nestjs.com/techniques/serialization
+[doc]: NestJS — Serialization (FR) | https://docs.nest-js.fr/techniques/serialization
 
 ### Quel est le principal risque de sécurité si l'on passe un body non filtré directement à `repository.save(body)` ?
 - [ ] Injection SQL
@@ -190,6 +196,7 @@ list(@Query('page') page: number) {}
 - [ ] Il chiffre la documentation
 > Le plugin s'exécute à la compilation (transformer TypeScript) et ajoute les métadonnées Swagger. Il peut aussi ajouter des validateurs avec l'option `classValidatorShim`.
 [doc]: NestJS — OpenAPI CLI plugin (EN) | https://docs.nestjs.com/openapi/cli-plugin
+[doc]: NestJS — OpenAPI CLI plugin (FR) | https://docs.nest-js.fr/openapi/cli-plugin
 
 ### Comment le front peut-il profiter de la documentation OpenAPI générée par NestJS ?
 - [ ] Il ne peut pas, c'est uniquement pour les humains
@@ -198,6 +205,7 @@ list(@Query('page') page: number) {}
 - [ ] En copiant les interfaces à la main
 > Générer le client depuis le contrat garantit la cohérence front/back. Importer les DTO NestJS côté front est déconseillé : ils dépendent de class-validator / class-transformer et de `reflect-metadata`.
 [doc]: NestJS — OpenAPI introduction (EN) | https://docs.nestjs.com/openapi/introduction
+[doc]: NestJS — OpenAPI introduction (FR) | https://docs.nest-js.fr/openapi/introduction
 
 ### Avec `transform: true`, que devient `dto` dans `create(@Body() dto: CreateUserDto)` ?
 - [ ] Un objet littéral identique au JSON reçu
@@ -206,6 +214,7 @@ list(@Query('page') page: number) {}
 - [ ] Un `Partial<CreateUserDto>`
 > `transform` applique `plainToInstance` avant de valider et transmet l'instance au handler. Sans lui, la validation a lieu sur une instance temporaire, mais le handler reçoit l'objet brut.
 [doc]: NestJS — Transform payload objects (EN) | https://docs.nestjs.com/techniques/validation#transform-payload-objects
+[doc]: NestJS — Transform payload objects (FR) | https://docs.nest-js.fr/techniques/validation
 
 ### Quelles options du `ValidationPipe` renforcent la sécurité des entrées ? (plusieurs réponses)
 - [x] `whitelist: true`
@@ -214,6 +223,7 @@ list(@Query('page') page: number) {}
 - [ ] `skipMissingProperties: true`
 > `whitelist` et `forbidNonWhitelisted` bloquent les champs non déclarés. `skipMissingProperties` affaiblit au contraire la validation (les propriétés absentes ne sont plus vérifiées). `disableErrorMessages: true` peut servir en prod pour ne pas divulguer la structure.
 [doc]: NestJS — Validation options (EN) | https://docs.nestjs.com/techniques/validation#using-the-built-in-validationpipe
+[doc]: NestJS — Validation options (FR) | https://docs.nest-js.fr/techniques/validation
 
 ### Pourquoi le tableau n'est-il pas validé ?
 ```ts
@@ -226,6 +236,7 @@ createMany(@Body() dtos: CreateUserDto[]) {}
 - [ ] Il faut déclarer la route en `@Put()`
 > Le type émis par `emitDecoratorMetadata` pour `CreateUserDto[]` est simplement `Array`. Solutions : `new ParseArrayPipe({ items: CreateUserDto })`, ou un DTO enveloppe `{ users: CreateUserDto[] }` avec `@ValidateNested({ each: true })` et `@Type(() => CreateUserDto)`.
 [doc]: NestJS — Parsing and validating arrays (EN) | https://docs.nestjs.com/techniques/validation#parsing-and-validating-arrays
+[doc]: NestJS — Parsing and validating arrays (FR) | https://docs.nest-js.fr/techniques/validation
 
 ### Comment valider que chaque élément de `tags: string[]` est une chaîne non vide ?
 - [ ] `@IsString() @IsNotEmpty()`
@@ -242,6 +253,7 @@ createMany(@Body() dtos: CreateUserDto[]) {}
 - [ ] `class UpdateUserDto extends CreateUserDto {}` avec `@IsOptional()` partout
 > Les mapped types de `@nestjs/mapped-types` (ou `@nestjs/swagger`) produisent une **classe** et recopient les métadonnées de validation et de transformation. Ils se composent : `PickType`, `OmitType`, `PartialType`, `IntersectionType`.
 [doc]: NestJS — Mapped types (EN) | https://docs.nestjs.com/techniques/validation#mapped-types
+[doc]: NestJS — Mapped types (FR) | https://docs.nest-js.fr/techniques/validation
 
 ### Comment valider `siret` uniquement quand `type === 'entreprise'` ?
 - [ ] `@IsOptional()`
@@ -282,3 +294,4 @@ createMany(@Body() dtos: CreateUserDto[]) {}
 - [ ] Elle convertit les DTO en interfaces
 > Pratique pour les query params, mais à manier avec prudence : `'false'` devient `true` pour un `boolean` (chaîne non vide). Pour les booléens, préférez un `@Transform` explicite.
 [doc]: NestJS — Explicit conversion (EN) | https://docs.nestjs.com/techniques/validation#explicit-conversion
+[doc]: NestJS — Explicit conversion (FR) | https://docs.nest-js.fr/techniques/validation

@@ -148,6 +148,7 @@ ThrottlerModule.forRoot([{ ttl: 60_000, limit: 10 }]); // + APP_GUARD ThrottlerG
 - [ ] Elle est ignorée
 > Passport appelle `validate` après vérification de la signature/expiration du JWT. Le retour (ou une exception) détermine l'authentification ; on y charge souvent l'utilisateur ou on vérifie qu'il n'est pas désactivé.
 [doc]: NestJS — Passport (EN) | https://docs.nestjs.com/recipes/passport
+[doc]: NestJS — Passport (FR) | https://docs.nest-js.fr/recipes/passport
 
 ### Quel est l'intérêt d'un guard JWT global avec un décorateur `@Public()` ?
 - [ ] Les performances
@@ -156,6 +157,7 @@ ThrottlerModule.forRoot([{ ttl: 60_000, limit: 10 }]); // + APP_GUARD ThrottlerG
 - [ ] Cela permet de ne pas signer les tokens
 > Avec `@UseGuards` route par route, un oubli expose une route. L'approche inverse (*secure by default*) réduit le risque humain.
 [doc]: NestJS — Enable authentication globally (EN) | https://docs.nestjs.com/security/authentication#enable-authentication-globally
+[doc]: NestJS — Enable authentication globally (FR) | https://docs.nest-js.fr/security/authentication
 
 ### `GET /orders/:id` vérifie seulement que l'utilisateur est authentifié. Quelle faille est présente ?
 - [ ] Injection SQL
@@ -204,6 +206,7 @@ ThrottlerModule.forRoot([{ ttl: 60_000, limit: 10 }]); // + APP_GUARD ThrottlerG
 - [ ] `@nestjs/jwt`
 > Le throttler limite le nombre de requêtes par fenêtre de temps (`@Throttle()` pour affiner par route). Derrière un proxy, configure `trust proxy` pour lire la vraie IP, et utilise un stockage partagé (Redis) si plusieurs instances.
 [doc]: NestJS — Rate limiting (EN) | https://docs.nestjs.com/security/rate-limiting
+[doc]: NestJS — Rate limiting (FR) | https://docs.nest-js.fr/security/rate-limiting
 
 ### Quelle mesure est la plus efficace en cas de détection de réutilisation d'un refresh token déjà utilisé (rotation) ?
 - [ ] L'ignorer
@@ -220,6 +223,7 @@ ThrottlerModule.forRoot([{ ttl: 60_000, limit: 10 }]); // + APP_GUARD ThrottlerG
 - [ ] Renvoyer la stack trace des erreurs 500 au client
 > Exposer les stack traces aide les attaquants (chemins, versions, requêtes). Les erreurs détaillées vont dans les logs, pas dans la réponse.
 [doc]: NestJS — Helmet (EN) | https://docs.nestjs.com/security/helmet
+[doc]: NestJS — Helmet (FR) | https://docs.nest-js.fr/security/helmet
 
 ### Quelle durée de vie viser pour un access token JWT accompagné d'un refresh token ?
 - [ ] 30 jours, pour éviter de reconnecter l'utilisateur
@@ -276,6 +280,7 @@ ThrottlerModule.forRoot([{ ttl: 60_000, limit: 10 }]); // + APP_GUARD ThrottlerG
 - [ ] Une simple vérification du JWT
 > Les rôles seuls ne savent pas répondre à « est-ce **son** article ? ». La documentation NestJS propose CASL pour exprimer des règles comme `can('update', 'Article', { authorId: user.id })`, vérifiées sur la ressource chargée.
 [doc]: NestJS — Authorization (EN) | https://docs.nestjs.com/security/authorization
+[doc]: NestJS — Authorization (FR) | https://docs.nest-js.fr/security/authorization
 
 ### La connexion se fait avec un email, mais la stratégie Passport `local` cherche `username` dans le body. Comment corriger ?
 - [ ] Renommer le champ `email` en `username` dans le front
@@ -284,3 +289,4 @@ ThrottlerModule.forRoot([{ ttl: 60_000, limit: 10 }]); // + APP_GUARD ThrottlerG
 - [ ] Utiliser la stratégie `jwt` à la place
 > Les options passées à `super()` dans une `PassportStrategy` sont celles de la stratégie Passport sous-jacente. `validate(email, password)` reçoit ensuite les bons champs.
 [doc]: NestJS — Passport recipe (EN) | https://docs.nestjs.com/recipes/passport
+[doc]: NestJS — Passport recipe (FR) | https://docs.nest-js.fr/recipes/passport

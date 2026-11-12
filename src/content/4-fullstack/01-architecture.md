@@ -161,6 +161,7 @@ Documenter les choix structurants dans des **ADR** (*Architecture Decision Recor
 - [ ] En important Prisma dans le domaine
 > Une interface est effacée et ne peut pas servir de token. Une classe abstraite existe au runtime et documente le contrat. En test, on fournit un adapter en mémoire.
 [doc]: NestJS — Custom providers (EN) | https://docs.nestjs.com/fundamentals/custom-providers
+[doc]: NestJS — Custom providers (FR) | https://docs.nest-js.fr/fundamentals/custom-providers
 
 ### À quoi sert un ADR (Architecture Decision Record) ?
 - [ ] À générer la documentation de l'API

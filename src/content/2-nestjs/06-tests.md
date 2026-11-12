@@ -107,6 +107,7 @@ De plus en plus de projets Nest migrent de Jest à **Vitest** (plus rapide, ESM 
 - [ ] `User`
 > `@InjectRepository(User)` est un raccourci pour `@Inject(getRepositoryToken(User))`. Dans le module de test : `{ provide: getRepositoryToken(User), useValue: mockRepo }`.
 [doc]: NestJS — Database, testing (EN) | https://docs.nestjs.com/techniques/database#testing
+[doc]: NestJS — Database, testing (FR) | https://docs.nest-js.fr/techniques/database
 
 ### Que fait `.overrideProvider(PaymentGateway).useValue(fake)` ?
 - [ ] Il ajoute un second provider `PaymentGateway`
@@ -115,6 +116,7 @@ De plus en plus de projets Nest migrent de Jest à **Vitest** (plus rapide, ESM 
 - [ ] Il ne fonctionne qu'en e2e
 > `overrideProvider` agit sur le conteneur compilé, idéal pour remplacer une dépendance externe (paiement, mail) tout en gardant le reste de l'application réelle.
 [doc]: NestJS — Testing (EN) | https://docs.nestjs.com/fundamentals/testing
+[doc]: NestJS — Testing (FR) | https://docs.nest-js.fr/fundamentals/testing
 
 ### Un test e2e renvoie 201 alors que le body est invalide, alors qu'en local l'API renvoie 400. Cause probable ?
 - [ ] Supertest désactive la validation
@@ -123,6 +125,7 @@ De plus en plus de projets Nest migrent de Jest à **Vitest** (plus rapide, ESM 
 - [ ] Le body n'est pas envoyé en JSON par défaut
 > `main.ts` n'est pas exécuté en test. Il faut reproduire la configuration (fonction `setupApp(app)` partagée) ou déclarer le pipe via `APP_PIPE` dans un module.
 [doc]: NestJS — End-to-end testing (EN) | https://docs.nestjs.com/fundamentals/testing#end-to-end-testing
+[doc]: NestJS — End-to-end testing (FR) | https://docs.nest-js.fr/fundamentals/testing
 
 ### Pourquoi appeler `app.close()` dans `afterAll` ?
 - [ ] Pour vider les mocks
@@ -131,6 +134,7 @@ De plus en plus de projets Nest migrent de Jest à **Vitest** (plus rapide, ESM 
 - [ ] Pour générer le rapport de couverture
 > `close()` déclenche les hooks `onModuleDestroy`/`onApplicationShutdown`. Sans cela : connexions ouvertes, warnings `--detectOpenHandles`, flakiness.
 [doc]: NestJS — Testing (EN) | https://docs.nestjs.com/fundamentals/testing#end-to-end-testing
+[doc]: NestJS — Testing (FR) | https://docs.nest-js.fr/fundamentals/testing
 
 ### Qu'est-ce qu'il vaut mieux tester dans un test unitaire de service ?
 - [ ] Que chaque méthode privée est appelée dans le bon ordre
@@ -163,6 +167,7 @@ De plus en plus de projets Nest migrent de Jest à **Vitest** (plus rapide, ESM 
 - [ ] Ce n'est pas possible
 > On peut aussi injecter un faux utilisateur : `canActivate: (ctx) => { ctx.switchToHttp().getRequest().user = fakeUser; return true; }`. Garder quelques tests e2e avec l'auth réelle.
 [doc]: NestJS — Overriding globally registered enhancers (EN) | https://docs.nestjs.com/fundamentals/testing#overriding-globally-registered-enhancers
+[doc]: NestJS — Overriding globally registered enhancers (FR) | https://docs.nest-js.fr/fundamentals/testing
 
 ### Pourquoi l'injection de dépendances échoue-t-elle en passant de Jest (ts-jest) à Vitest (esbuild) sans configuration ?
 - [ ] Vitest ne supporte pas les classes
@@ -171,6 +176,7 @@ De plus en plus de projets Nest migrent de Jest à **Vitest** (plus rapide, ESM 
 - [ ] NestJS est incompatible avec ESM
 > Il faut utiliser swc (`unplugin-swc`), qui sait émettre ces métadonnées. Le CLI Nest propose aussi `swc` comme builder (`nest start -b swc`), avec `typeCheck` séparé.
 [doc]: NestJS — SWC, Vitest (EN) | https://docs.nestjs.com/recipes/swc#vitest
+[doc]: NestJS — SWC, Vitest (FR) | https://docs.nest-js.fr/recipes/swc
 
 ### Quelle est la différence entre `jest.fn().mockResolvedValue(x)` et `jest.fn().mockReturnValue(x)` ?
 - [ ] Aucune
@@ -203,6 +209,7 @@ De plus en plus de projets Nest migrent de Jest à **Vitest** (plus rapide, ESM 
 - [x] Contrôler l'horloge et les appels externes
 > Des tests interdépendants échouent en cascade et ne peuvent pas tourner en parallèle ou dans un ordre aléatoire.
 [doc]: NestJS — Testing (EN) | https://docs.nestjs.com/fundamentals/testing
+[doc]: NestJS — Testing (FR) | https://docs.nest-js.fr/fundamentals/testing
 
 ### Quelle est la différence entre `jest.fn()` et `jest.spyOn(objet, 'methode')` ?
 - [ ] Aucune
@@ -219,6 +226,7 @@ De plus en plus de projets Nest migrent de Jest à **Vitest** (plus rapide, ESM 
 - [ ] Ce n'est pas testable
 > `get()` ne fonctionne que pour les providers statiques (singleton). Pour un provider request-scoped ou transient, `resolve()` crée une instance dans un sous-arbre d'injection ; deux appels renvoient deux instances différentes, sauf si l'on passe le même `contextId`.
 [doc]: NestJS — Testing request-scoped instances (EN) | https://docs.nestjs.com/fundamentals/testing#testing-request-scoped-instances
+[doc]: NestJS — Testing request-scoped instances (FR) | https://docs.nest-js.fr/fundamentals/testing
 
 ### Quelle est la différence entre `mockClear()`, `mockReset()` et `mockRestore()` ?
 - [ ] Ce sont des alias
