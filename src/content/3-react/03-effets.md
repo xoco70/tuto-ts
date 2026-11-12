@@ -71,6 +71,16 @@ S'exécute **avant** que le navigateur peigne l'écran, de façon synchrone. Uti
 
 Pour lire la dernière valeur d'une prop dans un effet **sans** qu'elle déclenche la resynchronisation : `useEffectEvent` (React 19.2). Avant, on passait par un `useRef` mis à jour à chaque rendu.
 
+## S'entraîner
+
+La doc React propose, en bas de chaque page, des défis avec solution et un bac à sable pour coder directement dans le navigateur :
+
+- [Synchroniser grâce aux Effets](https://fr.react.dev/learn/synchronizing-with-effects#challenges) — 4 défis
+- [Vous n’avez pas forcément besoin d’un Effet](https://fr.react.dev/learn/you-might-not-need-an-effect#challenges) — 4 défis
+- [Cycle de vie des Effets réactifs](https://fr.react.dev/learn/lifecycle-of-reactive-effects#challenges) — 5 défis
+- [Séparer les événements des Effets](https://fr.react.dev/learn/separating-events-from-effects#challenges) — 4 défis
+- [Alléger les dépendances des Effets](https://fr.react.dev/learn/removing-effect-dependencies#challenges) — 4 défis
+
 <!-- QUIZ -->
 
 ### Quand s'exécute la fonction de nettoyage retournée par un effet ?

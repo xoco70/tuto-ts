@@ -108,6 +108,15 @@ const enLigne = useSyncExternalStore(
 
 `useId` (ids uniques stables, SSR-compatibles, pour `htmlFor`/`aria-*`), `useTransition` (marquer une mise à jour comme non urgente), `useDeferredValue` (différer l'affichage d'une valeur), `useImperativeHandle`.
 
+## S'entraîner
+
+La doc React propose, en bas de chaque page, des défis avec solution et un bac à sable pour coder directement dans le navigateur :
+
+- [Référencer des valeurs avec les refs](https://fr.react.dev/learn/referencing-values-with-refs#challenges) — 4 défis
+- [Extraire la logique d’état dans un réducteur](https://fr.react.dev/learn/extracting-state-logic-into-a-reducer#challenges) — 4 défis
+- [Transmettre des données en profondeur avec le contexte](https://fr.react.dev/learn/passing-data-deeply-with-context#challenges) — 1 défi
+- [Réutiliser de la logique grâce aux Hooks personnalisés](https://fr.react.dev/learn/reusing-logic-with-custom-hooks#challenges) — 5 défis
+
 <!-- QUIZ -->
 
 ### Pourquoi ce code enfreint-il les règles des hooks ?

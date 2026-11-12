@@ -106,6 +106,18 @@ Pour des formulaires complexes : **React Hook Form** (+ Zod), ou les **Actions**
 
 L'état est attaché à la **position** du composant dans l'arbre. Même composant, même position → état conservé. Composant différent à cette position, ou `key` différente → état détruit.
 
+## S'entraîner
+
+La doc React propose, en bas de chaque page, des défis avec solution et un bac à sable pour coder directement dans le navigateur :
+
+- [L’état est un instantané](https://fr.react.dev/learn/state-as-a-snapshot#challenges) — 1 défi
+- [Cumuler les mises à jour d’un même état](https://fr.react.dev/learn/queueing-a-series-of-state-updates#challenges) — 2 défis
+- [Mettre à jour les objets d’un état](https://fr.react.dev/learn/updating-objects-in-state#challenges) — 3 défis
+- [Mettre à jour les tableaux d’un état](https://fr.react.dev/learn/updating-arrays-in-state#challenges) — 4 défis
+- [Choisir la structure de l’état](https://fr.react.dev/learn/choosing-the-state-structure#challenges) — 4 défis
+- [Partager l’état entre des composants](https://fr.react.dev/learn/sharing-state-between-components#challenges) — 2 défis
+- [Préserver et réinitialiser l’état](https://fr.react.dev/learn/preserving-and-resetting-state#challenges) — 5 défis
+
 <!-- QUIZ -->
 
 ### Que vaut `count` après un clic, s'il valait 0 ?

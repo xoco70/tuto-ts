@@ -83,6 +83,19 @@ React n'utilise pas l'héritage de composants. On compose : `children`, props de
 
 Un composant doit être **pur** pendant le rendu : mêmes props/état → même JSX, sans effet de bord (pas d'appel réseau, pas de mutation d'une variable externe). Les effets vont dans des **gestionnaires d'événements** ou, en dernier recours, dans `useEffect`.
 
+## S'entraîner
+
+La doc React propose, en bas de chaque page, des défis avec solution et un bac à sable pour coder directement dans le navigateur :
+
+- [Votre premier composant](https://fr.react.dev/learn/your-first-component#challenges) — 4 défis
+- [Écrire du balisage avec JSX](https://fr.react.dev/learn/writing-markup-with-jsx#challenges) — 1 défi
+- [JavaScript dans JSX grâce aux accolades](https://fr.react.dev/learn/javascript-in-jsx-with-curly-braces#challenges) — 3 défis
+- [Passer des props à un composant](https://fr.react.dev/learn/passing-props-to-a-component#challenges) — 3 défis
+- [Affichage conditionnel](https://fr.react.dev/learn/conditional-rendering#challenges) — 3 défis
+- [Afficher des listes](https://fr.react.dev/learn/rendering-lists#challenges) — 4 défis
+- [Garder les composants purs](https://fr.react.dev/learn/keeping-components-pure#challenges) — 3 défis
+- [Réagir aux événements](https://fr.react.dev/learn/responding-to-events#challenges) — 2 défis
+
 <!-- QUIZ -->
 
 ### Qu'affiche ce composant quand `count` vaut `0` ?
