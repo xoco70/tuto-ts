@@ -33,3 +33,7 @@ Chaque étape est un fichier Markdown dans `src/content/<parcours>/`. Le cours e
 ## Déploiement
 
 Le workflow `.github/workflows/deploy.yml` publie sur GitHub Pages à chaque push sur `main` (activer *Settings → Pages → Source : GitHub Actions*).
+
+## Crédits
+
+Certaines questions des étapes TypeScript 01, 02, 06 et 07 sont adaptées (réécrites et passées en TypeScript) de [JavaScript Questions](https://github.com/lydiahallie/javascript-questions) de Lydia Hallie, publié sous licence MIT (Copyright (c) 2019 Lydia Hallie).

@@ -376,3 +376,143 @@ const ville = user?.address?.city;
 - [ ] `null`
 > `object` désigne toute valeur **non primitive** : objets, tableaux, fonctions. Il exclut `string`, `number`, `boolean`, `bigint`, `symbol`, `null` et `undefined`. À ne pas confondre avec `{}` (tout sauf `null`/`undefined`) ni avec `Object` (à éviter).
 [doc]: Handbook — object | https://www.typescriptlang.org/fr/docs/handbook/2/functions.html
+
+### Que se passe-t-il à l'exécution de ce code JavaScript ?
+```js
+function direBonjour() {
+  console.log(nom);
+  console.log(age);
+  var nom = 'Lydia';
+  let age = 21;
+}
+direBonjour();
+```
+- [ ] Affiche `Lydia` puis `21`
+- [ ] Affiche `undefined` puis `undefined`
+- [x] Affiche `undefined`, puis lève une `ReferenceError`
+- [ ] Lève une `ReferenceError` dès la première ligne
+> Les deux déclarations sont **remontées** (*hoisting*), mais pas de la même façon. `var nom` est initialisée à `undefined` dès l'entrée dans la fonction. `let age` reste dans la **zone morte temporaire** (TDZ) jusqu'à sa ligne : y accéder avant lève `ReferenceError: Cannot access 'age' before initialization`. En TypeScript strict, les deux lignes sont signalées à la compilation (TS2454 pour `nom`, TS2448 pour `age`).
+[doc]: MDN — Hoisting | https://developer.mozilla.org/fr/docs/Glossary/Hoisting
+[doc]: MDN — let et la zone morte temporaire | https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Statements/let
+
+### Qu'affiche ce code ?
+```ts
+const c = { salut: 'Hey!' };
+const d = c;
+c.salut = 'Hello';
+console.log(d.salut);
+```
+- [x] `Hello`
+- [ ] `Hey!`
+- [ ] `undefined`
+- [ ] Erreur de compilation : `c` est une `const`
+> `d = c` copie la **référence**, pas l'objet : `c` et `d` désignent le même objet en mémoire. `const` interdit seulement de réassigner la variable (`c = …`), pas de modifier l'objet. Pour l'empêcher : `Object.freeze` à l'exécution, `Readonly<T>` ou `as const` à la compilation.
+[doc]: MDN — Utiliser les objets | https://developer.mozilla.org/fr/docs/Web/JavaScript/Guide/Working_with_objects
+
+### Qu'affiche ce code ?
+```ts
+const a = 3;
+const b = new Number(3);
+console.log(a == b, a === b);
+```
+- [x] `true false`
+- [ ] `true true`
+- [ ] `false false`
+- [ ] Ne compile pas : `number` et `Number` sont incompatibles
+> `new Number(3)` crée un **objet** qui enveloppe le nombre (`typeof b === 'object'`). `==` convertit l'objet en primitive et compare `3` à `3` ; `===` compare un nombre à un objet et renvoie `false`. TS accepte ce code car `number` est assignable à `Number`. C'est l'une des raisons pour lesquelles on type toujours avec `number` (minuscule) et jamais avec `Number`.
+[doc]: MDN — Égalité et identité | https://developer.mozilla.org/fr/docs/Web/JavaScript/Equality_comparisons_and_sameness
+[doc]: MDN — Number | https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Global_Objects/Number
+
+### Ce code compile-t-il ?
+```ts
+function estMajeur(data: { age: number }) {
+  return data === { age: 18 };
+}
+```
+- [ ] Oui, et renvoie `true` pour `estMajeur({ age: 18 })`
+- [ ] Oui, mais renvoie toujours `false`
+- [x] Non : TS signale que la condition sera toujours fausse
+- [ ] Non : il faut utiliser `==` pour comparer des objets
+> Les objets se comparent par **référence** : un littéral `{ age: 18 }` crée un nouvel objet, jamais identique à `data`, avec `===` comme avec `==`. Depuis TS 4.8, le compilateur refuse ce code (TS2839 : *This condition will always return 'false' since JavaScript compares objects by reference, not value*). Il faut comparer les champs (`data.age >= 18`).
+[doc]: MDN — Égalité et identité | https://developer.mozilla.org/fr/docs/Web/JavaScript/Equality_comparisons_and_sameness
+
+### Que vaut `typeof args` à l'exécution ?
+```ts
+function age(...args: number[]) {
+  console.log(typeof args);
+}
+age(21);
+```
+- [ ] `"number"`
+- [ ] `"array"`
+- [x] `"object"`
+- [ ] `"number[]"`
+> Le paramètre de reste est un vrai tableau, et un tableau est un objet : `typeof` renvoie `"object"`. Il n'existe pas de `typeof` « array » : pour tester un tableau à l'exécution, on utilise `Array.isArray(args)`. Le type `number[]` n'existe que pour le compilateur.
+[doc]: MDN — Paramètres du reste | https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Functions/rest_parameters
+
+### Qu'affiche ce code JavaScript ?
+```js
+const a = {};
+const b = { cle: 'b' };
+const c = { cle: 'c' };
+a[b] = 123;
+a[c] = 456;
+console.log(a[b]);
+```
+- [ ] `123`
+- [x] `456`
+- [ ] `undefined`
+- [ ] `TypeError`
+> Les clés d'un objet sont des chaînes (ou des symboles). `b` et `c` sont convertis en chaîne, et donnent tous deux `"[object Object]"` : la deuxième affectation écrase la première. TypeScript refuse ce code (TS2538 : un objet ne peut pas servir d'index). Pour indexer par objet, il faut une `Map` (ou une `WeakMap`), qui compare les clés par référence.
+[doc]: MDN — Accesseurs de propriétés | https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Operators/Property_accessors
+[doc]: MDN — Map | https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Global_Objects/Map
+
+### Parmi ces valeurs, lesquelles sont *falsy* (fausses dans un `if`) ? (plusieurs réponses)
+- [x] `0`
+- [ ] `new Number(0)`
+- [x] `''`
+- [ ] `' '`
+- [ ] `new Boolean(false)`
+- [x] `undefined`
+> Les valeurs *falsy* sont `false`, `0`, `-0`, `0n`, `''`, `null`, `undefined` et `NaN`. Tout le reste est *truthy*, y compris une chaîne qui contient un espace et **tout objet**, même `new Boolean(false)`. C'est aussi pour cela que `if (valeur)` est un piège quand `0` ou `''` sont des valeurs valides : préférer `valeur !== undefined` ou `??`.
+[doc]: MDN — Falsy | https://developer.mozilla.org/fr/docs/Glossary/Falsy
+
+### Qu'affiche ce code ?
+```ts
+let personne: { nom: string } | null = { nom: 'Lydia' };
+const membres = [personne];
+personne = null;
+console.log(membres);
+```
+- [ ] `null`
+- [ ] `[null]`
+- [ ] `[{}]`
+- [x] `[{ nom: 'Lydia' }]`
+> Le tableau a reçu une **copie de la référence** au moment de sa création. Réassigner `personne` change seulement ce que désigne la variable : l'objet existe toujours, et le tableau pointe toujours vers lui.
+[doc]: MDN — Utiliser les objets | https://developer.mozilla.org/fr/docs/Web/JavaScript/Guide/Working_with_objects
+
+### Que vaut `3 + 4 + '5'` ?
+- [ ] `"345"`
+- [x] `"75"`
+- [ ] `12`
+- [ ] `"12"`
+> `+` s'évalue de gauche à droite : `3 + 4` donne le nombre `7`, puis `7 + '5'` est une concaténation, car dès qu'un opérande est une chaîne, l'autre est converti en chaîne. TS accepte `number + string` (le résultat est typé `string`) : il ne protège pas de ce piège, d'où l'intérêt de convertir explicitement (`Number(saisie)`) les valeurs venues d'un formulaire.
+[doc]: MDN — Addition (+) | https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Operators/Addition
+
+### Qu'affiche ce code ?
+```ts
+function modifier(membre: { nom: string }, annee: string) {
+  membre.nom = 'Lydia';
+  annee = '1998';
+}
+const personne = { nom: 'Sarah' };
+const naissance = '1997';
+modifier(personne, naissance);
+console.log(personne, naissance);
+```
+- [x] `{ nom: 'Lydia' } '1997'`
+- [ ] `{ nom: 'Sarah' } '1998'`
+- [ ] `{ nom: 'Lydia' } '1998'`
+- [ ] `{ nom: 'Sarah' } '1997'`
+> JavaScript passe **toujours** les arguments par valeur. Pour un objet, cette valeur est une référence : la fonction peut donc modifier l'objet partagé (`membre.nom`), mais réassigner un paramètre (`annee = …`) ne touche que la variable locale. C'est pour cela qu'en React on crée un nouvel objet plutôt que de muter celui reçu en props ou en état.
+[doc]: MDN — Fonctions (paramètres) | https://developer.mozilla.org/fr/docs/Web/JavaScript/Guide/Functions

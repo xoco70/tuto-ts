@@ -334,3 +334,30 @@ class Verificateur implements Verifiable {
 - [ ] Il n'est pas signalé, `s` est inféré `string`
 > `implements` vérifie seulement que la classe est **compatible** avec l'interface ; il ne change pas le type de la classe et ne fournit pas de typage contextuel aux méthodes. Il faut annoter `verifier(s: string)`.
 [doc]: Handbook — implements (mises en garde) | https://www.typescriptlang.org/fr/docs/handbook/2/classes.html
+
+### Ce code compile-t-il ?
+```ts
+class Cameleon {
+  couleur: string;
+  static changerCouleur(c: string) { return c; }
+  constructor(couleur = 'vert') { this.couleur = couleur; }
+}
+const freddie = new Cameleon('violet');
+freddie.changerCouleur('orange');
+```
+- [ ] Oui, et renvoie `'orange'`
+- [ ] Oui, et modifie `freddie.couleur`
+- [x] Non : une méthode `static` n'existe pas sur les instances
+- [ ] Non : un constructeur ne peut pas avoir de paramètre par défaut
+> Un membre `static` appartient à la **classe** (`Cameleon.changerCouleur(…)`), pas aux instances. TS refuse l'appel (TS2576 : *Did you mean to access the static member 'Cameleon.changerCouleur' instead?*). En JavaScript pur, l'erreur n'apparaîtrait qu'à l'exécution : `TypeError: freddie.changerCouleur is not a function`.
+[doc]: MDN — static | https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Classes/static
+[doc]: Handbook — Membres statiques | https://www.typescriptlang.org/fr/docs/handbook/2/classes.html
+
+### Tous les objets JavaScript ont-ils un prototype ?
+- [ ] Oui, tous les objets héritent de `Object.prototype`
+- [x] Non : `Object.prototype` lui-même et les objets créés avec `Object.create(null)` n'en ont pas
+- [ ] Non : seules les instances de classes en ont un
+- [ ] Oui, sauf les tableaux
+> La chaîne de prototypes s'arrête à `Object.prototype`, dont le prototype est `null`. `Object.create(null)` crée un objet **sans prototype** : il n'hérite ni de `toString` ni de `hasOwnProperty`, ce qui en fait un dictionnaire sans clé parasite (pas de risque de collision avec `"constructor"` ou `"__proto__"`). Pour un vrai dictionnaire, une `Map` reste souvent préférable.
+[doc]: MDN — Héritage et chaîne de prototypes | https://developer.mozilla.org/fr/docs/Web/JavaScript/Guide/Inheritance_and_the_prototype_chain
+[doc]: MDN — Object.create | https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Global_Objects/Object/create

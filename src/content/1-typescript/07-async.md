@@ -335,3 +335,45 @@ const v = await Promise.resolve(1).finally(() => 2);
 - [ ] Pour réduire le nombre total de tentatives
 > Si 1 000 clients échouent ensemble avec un backoff fixe (1 s, 2 s, 4 s…), ils reviennent ensemble — effet « troupeau ». Un délai aléatoire (`random(0, base * 2 ** tentative)`) étale la charge et laisse le service récupérer.
 [doc]: AWS — Exponential backoff and jitter (EN) | https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/
+
+### Dans un projet Node avec `@types/node`, pourquoi cette ligne ne compile-t-elle pas, et comment la typer de façon portable ?
+```ts
+const id: number = setInterval(() => console.log('Hi'), 1000);
+```
+- [ ] `setInterval` renvoie `void` : il faut garder la fonction pour l'annuler
+- [x] Dans Node, `setInterval` renvoie un objet `Timeout`, pas un nombre : on type avec `ReturnType<typeof setInterval>`
+- [ ] Il faut écrire `window.setInterval`, qui existe aussi dans Node
+- [ ] `setInterval` renvoie une `Promise` : il faut l'attendre avec `await`
+> Dans le navigateur, `setInterval` renvoie un identifiant numérique. Dans Node, il renvoie un objet `Timeout` (avec `ref()`, `unref()`, `refresh()`…). Les deux s'annulent avec `clearInterval(id)`. `ReturnType<typeof setInterval>` donne le bon type quel que soit l'environnement, ce qui est utile pour du code partagé entre front et back.
+[doc]: MDN — setInterval | https://developer.mozilla.org/fr/docs/Web/API/Window/setInterval
+[doc]: Node.js — Timers (EN) | https://nodejs.org/api/timers.html
+
+### Qu'affiche ce code ?
+```ts
+function* generateur(i: number) {
+  yield i;
+  yield i * 2;
+}
+const gen = generateur(10);
+console.log(gen.next().value);
+console.log(gen.next().value);
+```
+- [ ] `[0, 10]` puis `[10, 20]`
+- [ ] `20` puis `20`
+- [x] `10` puis `20`
+- [ ] `undefined` puis `10`
+> Appeler un générateur n'exécute rien : on obtient un **itérateur**. Chaque `next()` reprend l'exécution jusqu'au `yield` suivant, et renvoie `{ value, done }`. Un troisième appel renverrait `{ value: undefined, done: true }`. Les générateurs asynchrones (`async function*` + `for await`) reposent sur le même principe pour paginer une API ou lire un flux.
+[doc]: MDN — function* | https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Statements/function%2A
+
+### Qu'affiche ce code ?
+```ts
+const p1 = new Promise<string>((res) => setTimeout(res, 500, 'un'));
+const p2 = new Promise<string>((res) => setTimeout(res, 100, 'deux'));
+Promise.race([p1, p2]).then((r) => console.log(r));
+```
+- [ ] `un`
+- [x] `deux`
+- [ ] `deux`, puis `un`
+- [ ] `un`, puis `deux`
+> `Promise.race` se règle comme la **première** promesse réglée (résolue ou rejetée) : ici `p2`, au bout de 100 ms. `then` ne s'exécute qu'une fois. `p1` continue de tourner mais son résultat est ignoré : `race` n'annule rien (il faut un `AbortController` pour cela). Les arguments après le délai de `setTimeout` sont passés au callback, d'où `res('deux')`.
+[doc]: MDN — Promise.race | https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Global_Objects/Promise/race

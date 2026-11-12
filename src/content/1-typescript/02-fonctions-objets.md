@@ -371,3 +371,127 @@ const scores: Record<'alice' | 'bob', number> = { alice: 12 };
 - [ ] Ce n'est autorisé qu'avec `strict: false`
 > En JavaScript, ignorer des arguments supplémentaires est sans danger : TS accepte donc une fonction avec **moins** de paramètres. L'inverse (exiger plus de paramètres que l'appelant n'en fournit) est refusé. C'est pourquoi il ne faut pas déclarer un paramètre optionnel dans un type de callback « au cas où ».
 [doc]: Handbook — Paramètres optionnels dans les callbacks | https://www.typescriptlang.org/fr/docs/handbook/2/functions.html
+
+### Qu'affiche ce code ?
+```ts
+for (var i = 0; i < 3; i++) {
+  setTimeout(() => console.log(i), 1);
+}
+for (let j = 0; j < 3; j++) {
+  setTimeout(() => console.log(j), 1);
+}
+```
+- [ ] `0 1 2` puis `0 1 2`
+- [ ] `0 1 2` puis `3 3 3`
+- [x] `3 3 3` puis `0 1 2`
+- [ ] `3 3 3` puis `3 3 3`
+> Les callbacks s'exécutent **après** la fin des boucles. Avec `var`, il n'existe qu'une seule variable `i` pour toute la fonction : les trois closures lisent sa valeur finale, `3`. Avec `let`, chaque itération crée une **nouvelle liaison** `j`, et chaque closure capture la sienne.
+[doc]: MDN — Closures | https://developer.mozilla.org/fr/docs/Web/JavaScript/Guide/Closures
+
+### Dans un module ES (fichier avec `import`/`export`), que se passe-t-il ?
+```ts
+const forme = {
+  rayon: 10,
+  diametre() { return this.rayon * 2; },
+  perimetre: () => 2 * Math.PI * this.rayon,
+};
+forme.diametre();
+forme.perimetre();
+```
+- [ ] `20`, puis `62.83…`
+- [x] `20`, puis une `TypeError` : `this` vaut `undefined`
+- [ ] `NaN`, puis `62.83…`
+- [ ] `20`, puis `undefined`
+> Une méthode classique reçoit `this` de l'appel (`forme.diametre()` → `this === forme`). Une fonction fléchée n'a **pas de `this` propre** : elle capture celui du code qui l'entoure, ici le niveau du module, où `this` vaut `undefined`. Dans un script non-module, ce serait l'objet global, et le résultat serait `NaN`. TS signale l'erreur à la compilation (*Object is possibly 'undefined'*). Règle : pas de fonction fléchée pour une méthode qui utilise `this`.
+[doc]: MDN — Fonctions fléchées | https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Functions/Arrow_functions
+
+### Que reçoit `info` en arguments ?
+```ts
+function info(chaines: TemplateStringsArray, nom: string, age: number) {
+  console.log(chaines, nom, age);
+}
+info`${'Lydia'} a ${21} ans`;
+```
+- [ ] `'Lydia'`, `21`, `['', ' a ', ' ans']`
+- [x] `['', ' a ', ' ans']`, `'Lydia'`, `21`
+- [ ] `'Lydia a 21 ans'`, `undefined`, `undefined`
+- [ ] `['Lydia', 21]`, `undefined`, `undefined`
+> Avec un **gabarit étiqueté** (*tagged template*), le premier argument est le tableau des morceaux de texte fixes (il y en a toujours un de plus que d'expressions, d'où les chaînes vides), puis viennent les valeurs des expressions. C'est le mécanisme utilisé par `` sql`…` `` (requêtes paramétrées, sans injection SQL), `styled-components` ou `graphql-tag`.
+[doc]: MDN — Littéraux de gabarits | https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Template_literals
+
+### Qu'affiche ce code ?
+```ts
+function dire(this: { nom: string }, age: number) {
+  return `${this.nom} a ${age} ans`;
+}
+const lydia = { nom: 'Lydia' };
+console.log(dire.call(lydia, 21));
+console.log(typeof dire.bind(lydia, 21));
+```
+- [ ] `Lydia a 21 ans` puis `Lydia a 21 ans`
+- [x] `Lydia a 21 ans` puis `function`
+- [ ] `undefined a 21 ans` puis `function`
+- [ ] `function` puis `function`
+> `call` (et `apply`, qui prend un tableau d'arguments) **appelle immédiatement** la fonction avec le `this` donné. `bind` ne l'appelle pas : il renvoie une **nouvelle fonction** dont le `this` (et ici le premier argument) est fixé. Le paramètre `this:` de la signature n'existe que pour TS, qui vérifie ainsi que chaque appel fournit le bon contexte.
+[doc]: MDN — Function.prototype.call | https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Global_Objects/Function/call
+[doc]: MDN — Function.prototype.bind | https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Global_Objects/Function/bind
+
+### Que renvoie cette expression ?
+```ts
+[[0, 1], [2, 3]].reduce((acc, cur) => acc.concat(cur), [1, 2]);
+```
+- [ ] `[0, 1, 2, 3, 1, 2]`
+- [ ] `[6, 1, 2]`
+- [x] `[1, 2, 0, 1, 2, 3]`
+- [ ] `[1, 2, 6]`
+> La valeur initiale `[1, 2]` est le premier `acc`. Tour 1 : `[1, 2].concat([0, 1])` donne `[1, 2, 0, 1]`. Tour 2 : on y concatène `[2, 3]`. Pour aplatir un tableau, `arr.flat()` est plus lisible.
+[doc]: MDN — Array.prototype.reduce | https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Global_Objects/Array/reduce
+
+### Qu'affiche ce code ?
+```ts
+function saluer(): string {
+  throw 'Hello world!';
+}
+try {
+  const data = saluer();
+  console.log('Ça marche', data);
+} catch (e) {
+  console.log('Erreur :', e);
+}
+```
+- [ ] `Ça marche Hello world!`
+- [x] `Erreur : Hello world!`
+- [ ] `Erreur : undefined`
+- [ ] `SyntaxError` : on ne peut lancer que des objets `Error`
+> On peut lancer **n'importe quelle valeur** : une chaîne, un nombre, un objet… C'est pour cela que TS type `e` en `unknown` dans un `catch`. Lancer une chaîne est une mauvaise pratique : on perd la pile d'appels (*stack trace*) et `e instanceof Error` est faux. Il vaut mieux toujours faire `throw new Error('…')`, ou utiliser une sous-classe d'`Error`.
+[doc]: MDN — throw | https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Statements/throw
+
+### Qu'affiche ce code ?
+```ts
+const reglages = { utilisateur: 'lydia', niveau: 19, sante: 90 };
+console.log(JSON.stringify(reglages, ['niveau', 'sante']));
+```
+- [x] `{"niveau":19,"sante":90}`
+- [ ] `{"utilisateur":"lydia"}`
+- [ ] `["niveau","sante"]`
+- [ ] `{"utilisateur":"lydia","niveau":19,"sante":90}`
+> Le deuxième argument de `JSON.stringify` est un *replacer*. Un **tableau** sert de liste blanche des clés à sérialiser. Une **fonction** `(cle, valeur) => …` permet de transformer ou masquer des valeurs, par exemple pour retirer un mot de passe d'un log. Le troisième argument indente le résultat (`JSON.stringify(x, null, 2)`).
+[doc]: MDN — JSON.stringify | https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify
+
+### Qu'affiche ce code ?
+```ts
+const valeur = { nombre: 10 };
+const multiplier = (x = { ...valeur }) => {
+  console.log((x.nombre *= 2));
+};
+multiplier();
+multiplier();
+multiplier(valeur);
+multiplier(valeur);
+```
+- [ ] `20 40 80 160`
+- [ ] `20 40 20 40`
+- [x] `20 20 20 40`
+- [ ] `NaN NaN 20 40`
+> Une valeur par défaut est **évaluée à chaque appel** (contrairement à Python) : les deux premiers appels reçoivent chacun une nouvelle copie `{ nombre: 10 }`, et affichent `20`. Les deux suivants reçoivent l'objet `valeur` lui-même et le **modifient** : `20`, puis `40`. Une copie par spread est **superficielle** : elle ne protège pas les objets imbriqués (`structuredClone` pour une copie profonde).
+[doc]: MDN — Valeurs par défaut des arguments | https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Functions/Default_parameters
