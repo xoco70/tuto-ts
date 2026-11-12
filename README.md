@@ -1,9 +1,9 @@
 # Parcours Fullstack TypeScript
 
-Tutoriel + quiz en français pour monter en compétence sur **TypeScript**, **NestJS** et **React**, jusqu'au niveau attendu pour un poste de **développeur fullstack senior**.
+Tutoriel + quiz en français pour monter en compétence sur **TypeScript**, **Node.js**, **NestJS** et **React**, jusqu'au niveau attendu pour un poste de **développeur fullstack senior**.
 
-- 26 étapes progressives (TypeScript → NestJS → React → Fullstack senior), toutes accessibles librement
-- Un cours par étape, puis un quiz tiré au hasard dans un pool de questions (plus de 550 au total)
+- 30 étapes progressives (TypeScript → Node.js → NestJS → React → Fullstack senior), toutes accessibles librement
+- Un cours par étape, puis un quiz tiré au hasard dans un pool de questions (plus de 670 au total)
 - Chaque réponse est expliquée, avec le cours de référence et un lien vers la documentation (en français quand elle existe)
 - Tirage pondéré : les questions jamais vues et celles ratées reviennent en priorité
 - Examen blanc mélangeant les parcours

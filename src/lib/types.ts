@@ -1,4 +1,4 @@
-export type TrackId = 'typescript' | 'nestjs' | 'react' | 'fullstack';
+export type TrackId = 'typescript' | 'nodejs' | 'nestjs' | 'react' | 'fullstack';
 
 export interface Track {
   id: TrackId;

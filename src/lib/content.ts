@@ -9,6 +9,12 @@ export const TRACKS: Track[] = [
     description: 'Le langage : du système de types de base au typage avancé utilisé en entretien.',
   },
   {
+    id: 'nodejs',
+    title: 'Node.js',
+    color: '#5fa04e',
+    description: 'Le runtime : event loop, modules, streams, écosystème npm et nouveautés des dernières versions.',
+  },
+  {
     id: 'nestjs',
     title: 'NestJS',
     color: '#e0234e',
