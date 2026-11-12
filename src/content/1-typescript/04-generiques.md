@@ -92,6 +92,16 @@ Promise<T>            Array<T>           Map<K, V>         Set<T>
 Record<K, V>          Partial<T>         ReturnType<F>     Awaited<T>
 ```
 
+## S'entraîner
+
+- [TypeScript Exercises](https://typescript-exercises.github.io/) : 16 exercices progressifs à faire dans le navigateur. On part d'interfaces simples, on passe par les unions, le narrowing et les génériques, jusqu'aux fichiers de déclaration et à l'augmentation de modules.
+- [Type Challenges](https://github.com/type-challenges/type-challenges) : des exercices de typage avec tests intégrés, à résoudre dans le Playground (énoncés en anglais). Pour s'exercer aux contraintes génériques sur les tuples (`T extends readonly unknown[]`) :
+  - [Hello World](https://tsch.js.org/13) (échauffement)
+  - [Length of Tuple](https://tsch.js.org/18)
+  - [Concat](https://tsch.js.org/533)
+  - [Push](https://tsch.js.org/3057)
+  - [Unshift](https://tsch.js.org/3060)
+
 <!-- QUIZ -->
 
 ### Quel est le type de `x` ?

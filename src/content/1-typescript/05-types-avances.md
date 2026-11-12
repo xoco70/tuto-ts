@@ -114,6 +114,17 @@ getUser('u1' as OrderId);     // ❌
 
 Simule un typage nominal pour éviter de mélanger des identifiants de même type primitif.
 
+## S'entraîner
+
+Les [Type Challenges](https://github.com/type-challenges/type-challenges) font réimplémenter les types vus ci-dessus. Chaque défi s'ouvre dans le Playground avec ses tests, et les solutions de la communauté sont consultables (énoncés en anglais). Classés par section du cours, du plus simple au plus dur :
+
+- **keyof et accès indexé** : [Tuple to Union](https://tsch.js.org/10), [Type Lookup](https://tsch.js.org/62)
+- **Utility types** : [Pick](https://tsch.js.org/4), [Readonly](https://tsch.js.org/7), [Exclude](https://tsch.js.org/43), [Parameters](https://tsch.js.org/3312), [Get Return Type](https://tsch.js.org/2), [Omit](https://tsch.js.org/3)
+- **Mapped types** : [Tuple to Object](https://tsch.js.org/11), [Readonly 2](https://tsch.js.org/8), [Mutable](https://tsch.js.org/2793), [PickByType](https://tsch.js.org/2595), [Deep Readonly](https://tsch.js.org/9)
+- **Conditional types** : [If](https://tsch.js.org/268), [IsNever](https://tsch.js.org/1042), [AnyOf](https://tsch.js.org/949)
+- **infer** : [First of Array](https://tsch.js.org/14), [Last of Array](https://tsch.js.org/15), [Awaited](https://tsch.js.org/189), [Pop](https://tsch.js.org/16)
+- **Template literal types** : [Capitalize](https://tsch.js.org/110), [Trim Left](https://tsch.js.org/106), [Replace](https://tsch.js.org/116), [StartsWith](https://tsch.js.org/2688)
+
 <!-- QUIZ -->
 
 ### Quel est le type de `Cle` ?
