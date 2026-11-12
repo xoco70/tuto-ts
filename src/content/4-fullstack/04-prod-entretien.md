@@ -85,6 +85,11 @@ Méthode **STAR** : Situation, Tâche, Action (la **tienne**, au « je »), Rés
 
 Mets en avant ce que le backend apporte au front : contrats d'API typés, gestion d'erreurs, sécurité (XSS, CSRF, stockage des tokens), performance (cache, pagination), tests. Montre un projet fullstack TS complet (monorepo NestJS + React/Next.js, CI, tests, déployé).
 
+## S'entraîner et aller plus loin
+
+- **System design** : le [System Design Primer](https://github.com/donnemartin/system-design-primer) (en anglais) propose une [méthode pour aborder la question](https://github.com/donnemartin/system-design-primer#how-to-approach-a-system-design-interview-question), proche de celle ci-dessus, puis des [exercices corrigés](https://github.com/donnemartin/system-design-primer#system-design-interview-questions-with-solutions) (Pastebin, fil Twitter, web crawler, passer à des millions d'utilisateurs…). Il propose aussi une [liste de questions supplémentaires](https://github.com/donnemartin/system-design-primer#additional-system-design-interview-questions).
+- **Production Node** : [Node.js Best Practices](https://github.com/goldbergyoni/nodebestpractices/blob/master/README.french.md) (traduction française de 2023), sections [Mise en production](https://github.com/goldbergyoni/nodebestpractices/blob/master/README.french.md#5-pratiques-de-mise-en-production) (19 pratiques : supervision, logs, gestion de la mémoire, `NODE_ENV`…) et [Docker](https://github.com/goldbergyoni/nodebestpractices/blob/master/README.french.md#8-bonnes-pratiques-de-docker) (15 pratiques : build multi-étapes, `.dockerignore`, arrêt propre, limites mémoire…).
+
 <!-- QUIZ -->
 
 ### Pourquoi utiliser un build Docker multi-stage pour une application NestJS ?

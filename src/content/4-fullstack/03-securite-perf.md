@@ -89,6 +89,11 @@ Goulots fréquents : base de données (pool de connexions, index, réplicas en l
 
 Bundle (code splitting, tree-shaking), images (formats modernes, dimensions, lazy loading), polices, cache des assets avec hash dans le nom (`Cache-Control: immutable`), rendu serveur pour le premier affichage.
 
+## Pour aller plus loin
+
+- [Node.js Best Practices, section Sécurité](https://github.com/goldbergyoni/nodebestpractices/blob/master/README.french.md#6-bonnes-pratiques-de-sécurité) : 25 pratiques concrètes pour Node, dont la limitation de débit, l'injection, les en-têtes HTTP, l'audit des dépendances et l'exécution sans root (traduction française de 2023).
+- [System Design Primer](https://github.com/donnemartin/system-design-primer) (en anglais) : [load balancers](https://github.com/donnemartin/system-design-primer#load-balancer), [patterns de disponibilité](https://github.com/donnemartin/system-design-primer#availability-patterns), [bases de données](https://github.com/donnemartin/system-design-primer#database) (réplication, fédération, sharding) et [traitements asynchrones](https://github.com/donnemartin/system-design-primer#asynchronism) pour la montée en charge.
+
 <!-- QUIZ -->
 
 ### Quelle requête est vulnérable à l'injection SQL ?

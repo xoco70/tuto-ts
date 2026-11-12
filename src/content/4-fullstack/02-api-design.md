@@ -94,6 +94,10 @@ tRPC convient à un monorepo TS où front et back évoluent ensemble ; REST + Op
 
 Options : générer les types depuis OpenAPI (`openapi-typescript`, Orval), partager des schémas Zod (`ts-rest`, `zod-openapi`), ou tRPC. Objectif : **un changement de contrat casse la compilation**, pas la production.
 
+## Pour aller plus loin
+
+Le [System Design Primer](https://github.com/donnemartin/system-design-primer) (en anglais) compare [REST et RPC](https://github.com/donnemartin/system-design-primer#representational-state-transfer-rest) et détaille les niveaux et stratégies de [cache](https://github.com/donnemartin/system-design-primer#cache) : client, CDN, base de données, application, cache-aside, write-through.
+
 <!-- QUIZ -->
 
 ### Quelles méthodes HTTP sont idempotentes ? (plusieurs réponses)

@@ -80,6 +80,13 @@ Position senior habituelle : **commencer par un monolithe modulaire** aux fronti
 
 Documenter les choix structurants dans des **ADR** (*Architecture Decision Records*) : contexte, décision, alternatives, conséquences. Un senior sait expliquer un **compromis** (*trade-off*), pas seulement une « bonne pratique ».
 
+## Pour aller plus loin
+
+Le guide [Node.js Best Practices](https://github.com/goldbergyoni/nodebestpractices/blob/master/README.french.md) (traduction française de 2023 ; la [version anglaise](https://github.com/goldbergyoni/nodebestpractices) est plus à jour) détaille, exemples de code à l'appui :
+
+- [Structure de projet](https://github.com/goldbergyoni/nodebestpractices/blob/master/README.french.md#1-structure-de-projet) (5 pratiques) : découper par composants métier, garder la couche web à l'intérieur de ses limites, séparer `app` et `server`.
+- [Gestion des erreurs](https://github.com/goldbergyoni/nodebestpractices/blob/master/README.french.md#2-gestion-des-erreurs) (12 pratiques) : distinguer erreurs opérationnelles et erreurs de programmation, centraliser leur traitement, capturer les rejets de promesses non gérés.
+
 <!-- QUIZ -->
 
 ### Quel principe SOLID est respecté quand on ajoute un moyen de paiement en créant une nouvelle classe sans modifier le code existant ?
