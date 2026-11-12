@@ -240,3 +240,96 @@ setTimeout(c.inc, 10);
 - [ ] `interface User { id: string }`
 > Cette option n'autorise que la syntaxe qui peut être **simplement effacée** (ce que fait Node.js avec son *type stripping*, activé par défaut depuis Node 23.6). Les enums, `namespace` avec code et propriétés de paramètre génèrent du JS : interdits.
 [doc]: Release notes TS 5.8 — erasableSyntaxOnly (EN) | https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-8.html
+
+### Ce code compile-t-il ?
+```ts
+class A { private x = 1 }
+class B { private x = 1 }
+const a: A = new B();
+```
+- [ ] Oui, le typage est structurel et les formes sont identiques
+- [x] Non : des membres `private` (ou `protected`) rendent les classes incompatibles entre elles
+- [ ] Oui, mais `a.x` n'est pas accessible
+- [ ] Non, car il faut `implements A`
+> Sans membre privé, deux classes de même forme sont interchangeables. Un membre `private` ne compte comme compatible que s'il provient de la **même déclaration** : c'est une façon d'obtenir un typage quasi nominal.
+[doc]: Handbook — Classes (compatibilité) | https://www.typescriptlang.org/fr/docs/handbook/2/classes.html
+
+### Avec `noImplicitOverride`, que protège le mot-clé `override` ?
+- [ ] Il empêche une sous-classe de redéfinir la méthode
+- [x] Il signale une erreur si la méthode parente n'existe pas (faute de frappe, renommage)
+- [ ] Il appelle automatiquement `super.methode()`
+- [ ] Il rend la méthode abstraite
+> Avec `noImplicitOverride`, toute redéfinition doit être marquée `override`, et `override` sur une méthode absente du parent est une erreur. Si quelqu'un renomme la méthode dans la classe de base, les sous-classes cassent à la compilation au lieu de devenir silencieusement des méthodes orphelines.
+[doc]: tsconfig — noImplicitOverride | https://www.typescriptlang.org/fr/tsconfig#noImplicitOverride
+
+### Que se passe-t-il à la dernière ligne ?
+```ts
+class Personne {
+  constructor(private prenom: string, private nom: string) {}
+  get complet() { return `${this.prenom} ${this.nom}`; }
+}
+new Personne('Ada', 'Lovelace').complet = 'X';
+```
+- [ ] La valeur est remplacée
+- [x] Erreur de compilation : une propriété avec seulement un `get` est en lecture seule
+- [ ] Le getter est remplacé par une propriété
+- [ ] Rien, l'affectation est ignorée silencieusement
+> TS infère `readonly` pour un accesseur sans `set`. Pour autoriser l'écriture, il faut déclarer un `set complet(valeur: string)`.
+[doc]: Handbook — Getters / Setters | https://www.typescriptlang.org/fr/docs/handbook/2/classes.html
+
+### Qu'est-ce qu'une « fabrique de décorateur » comme `@Get(':id')` ?
+- [ ] Un décorateur appliqué au moment de l'appel HTTP
+- [x] Une fonction qui reçoit des paramètres et **retourne** le décorateur à appliquer
+- [ ] Un décorateur qui crée une nouvelle classe
+- [ ] Une syntaxe réservée à NestJS
+> `@Get(':id')` appelle d'abord `Get(':id')`, qui renvoie la vraie fonction décorateur. C'est pourquoi on écrit `@Injectable()` avec des parenthèses : `Injectable` est une fabrique, l'oublier lève une erreur ou ne fait rien.
+[doc]: Handbook — Decorator factories | https://www.typescriptlang.org/docs/handbook/decorators.html#decorator-factories
+
+### Quelle déclaration est invalide ?
+- [ ] `class A extends Base implements X, Y {}`
+- [ ] `class A implements X, Y, Z {}`
+- [x] `class A extends Base1, Base2 {}`
+- [ ] `interface I extends X, Y {}`
+> Une classe n'hérite que d'**une seule** classe (héritage simple de JavaScript), mais peut implémenter plusieurs interfaces. Une interface, elle, peut étendre plusieurs interfaces. Pour combiner des comportements, on préfère la composition (ou les mixins).
+[doc]: Handbook — implements | https://www.typescriptlang.org/fr/docs/handbook/2/classes.html
+
+### Pourquoi ce constructeur ne compile-t-il pas ?
+```ts
+class Admin extends User {
+  role: string;
+  constructor(nom: string) {
+    this.role = 'admin';
+    super(nom);
+  }
+}
+```
+- [ ] `role` doit être initialisé à la déclaration
+- [x] `super()` doit être appelé avant tout accès à `this` dans une classe dérivée
+- [ ] Une classe dérivée ne peut pas avoir de constructeur
+- [ ] Il faut écrire `super.constructor(nom)`
+> C'est une règle de JavaScript : l'instance n'existe qu'après l'appel au constructeur parent. TS le vérifie à la compilation ; JS lèverait une `ReferenceError` à l'exécution.
+[doc]: Handbook — Classes dérivées | https://www.typescriptlang.org/fr/docs/handbook/2/classes.html
+
+### Où peut-on affecter une propriété `readonly id: string` d'une classe ?
+- [ ] Nulle part, elle doit être initialisée à la déclaration
+- [x] À la déclaration ou dans le constructeur
+- [ ] Dans n'importe quelle méthode de la classe
+- [ ] Uniquement via un setter
+> `readonly` interdit toute affectation **après** la construction. C'est une garantie de compilation seulement : rien n'est gelé à l'exécution.
+[doc]: Handbook — readonly | https://www.typescriptlang.org/fr/docs/handbook/2/classes.html
+
+### Pourquoi ce code est-il signalé avec `noImplicitAny` ?
+```ts
+interface Verifiable { verifier(nom: string): boolean }
+class Verificateur implements Verifiable {
+  verifier(s) {
+    return s.toLowerCase() === 'ok';
+  }
+}
+```
+- [ ] Parce que `implements` est mal orthographié
+- [x] Parce que `implements` ne type pas les paramètres : `s` est implicitement `any`
+- [ ] Parce qu'il manque le mot-clé `override`
+- [ ] Il n'est pas signalé, `s` est inféré `string`
+> `implements` vérifie seulement que la classe est **compatible** avec l'interface ; il ne change pas le type de la classe et ne fournit pas de typage contextuel aux méthodes. Il faut annoter `verifier(s: string)`.
+[doc]: Handbook — implements (mises en garde) | https://www.typescriptlang.org/fr/docs/handbook/2/classes.html

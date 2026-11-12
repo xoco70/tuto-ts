@@ -229,3 +229,67 @@ type User = z.infer<typeof UserSchema>;
 - [ ] Les arguments passés entre deux fonctions internes typées
 > Tout ce qui franchit une **frontière** du système (réseau, env, fichiers, stockage, librairies non typées) doit être validé. À l'intérieur, le compilateur suffit. En NestJS, `ConfigModule` + un schéma (Joi/Zod) valide l'env au démarrage.
 [doc]: NestJS — Configuration, schema validation (EN) | https://docs.nestjs.com/techniques/configuration#schema-validation
+
+### À quoi sert `esModuleInterop` ?
+- [ ] À convertir automatiquement le projet en ESM
+- [x] À importer correctement un module CommonJS (`module.exports = …`) avec `import express from 'express'`
+- [ ] À autoriser `require` dans un fichier `.ts`
+- [ ] À générer des fichiers `.d.ts`
+> Sans cette option, il fallait écrire `import * as express from 'express'`, ce qui ne correspond pas au comportement réel des bundlers et de Node. `esModuleInterop` ajoute des helpers d'interopérabilité et active `allowSyntheticDefaultImports`.
+[doc]: tsconfig — esModuleInterop | https://www.typescriptlang.org/fr/tsconfig#esModuleInterop
+
+### Que fait `skipLibCheck: true` ?
+- [ ] Il ne compile pas `node_modules`
+- [x] Il saute la vérification de type des fichiers de déclaration `.d.ts`
+- [ ] Il ignore les erreurs dans les fichiers de test
+- [ ] Il désactive `@types`
+> Option quasi systématique : elle accélère la compilation et évite des conflits entre des `@types` incompatibles. Contrepartie : une vraie erreur dans vos propres `.d.ts` passera inaperçue.
+[doc]: tsconfig — skipLibCheck | https://www.typescriptlang.org/fr/tsconfig#skipLibCheck
+
+### Un projet Vite compile et tourne malgré une erreur de type évidente. Pourquoi ?
+- [ ] Vite désactive le mode `strict`
+- [x] Vite (via esbuild) retire les types sans les vérifier : il faut lancer `tsc --noEmit` à part
+- [ ] Les erreurs de type sont des warnings en développement
+- [ ] Vite ne supporte pas TypeScript
+> esbuild, swc ou Babel font de la **transpilation seule** pour être rapides. La vérification de type reste le travail de `tsc` (dans l'éditeur, en script `typecheck` et surtout en CI). Le `npm run build` de ce projet enchaîne justement `tsc -b` puis `vite build`.
+[doc]: Vite — TypeScript (transpilation seule) | https://vite.dev/guide/features.html#typescript
+
+### Qu'impose `verbatimModuleSyntax: true` ?
+- [ ] Les imports doivent avoir une extension `.js`
+- [x] Les imports de types doivent être marqués `type` ; les autres sont conservés tels quels dans le JS émis
+- [ ] Les exports par défaut sont interdits
+- [ ] Le code est émis sans modification
+> La règle est simple : ce qui n'est pas marqué `type` est émis, ce qui l'est est effacé. Plus aucune élision « magique » d'imports, ce qui rend le comportement prévisible pour les outils qui transpilent fichier par fichier.
+[doc]: tsconfig — verbatimModuleSyntax | https://www.typescriptlang.org/fr/tsconfig#verbatimModuleSyntax
+
+### Quand choisir `moduleResolution: "bundler"` ?
+- [ ] Pour une librairie publiée sur npm et exécutée directement par Node
+- [x] Pour du code traité par un bundler (Vite, webpack) : imports relatifs sans extension et prise en charge de `exports`
+- [ ] Pour un backend NestJS compilé avec `tsc`
+- [ ] Jamais, c'est déprécié
+> `bundler` imite la résolution des bundlers modernes. Pour du code exécuté par Node sans bundler (API, CLI, librairie), `nodenext` est plus fidèle et impose les extensions explicites.
+[doc]: TypeScript — Choisir les options de modules (EN) | https://www.typescriptlang.org/docs/handbook/modules/guides/choosing-compiler-options.html
+
+### Une librairie déclare `"exports": { ".": "./dist/index.js" }` dans son `package.json`. Que devient `import x from 'lib/dist/utils.js'` ?
+- [ ] Il fonctionne normalement
+- [x] Il échoue : seuls les points d'entrée listés dans `exports` sont importables
+- [ ] Il est redirigé vers `./dist/index.js`
+- [ ] Il fonctionne uniquement en CommonJS
+> Le champ `exports` définit l'**API publique** du paquet et bloque les imports profonds non déclarés. Il permet aussi de servir des fichiers différents selon les conditions (`import`, `require`, `types`).
+[doc]: Node.js — Package entry points (EN) | https://nodejs.org/api/packages.html#package-entry-points
+
+### Que vaut `z.coerce.number().parse('')` avec Zod ?
+- [ ] Une erreur de validation
+- [x] `0`
+- [ ] `NaN`
+- [ ] `undefined`
+> `z.coerce.number()` applique `Number(valeur)` avant validation, pratique pour les query params (toujours des chaînes). Mais `Number('') === 0` : un champ vide devient zéro. Pour un champ obligatoire, mieux vaut valider la chaîne d'abord (ex. `z.string().min(1).pipe(z.coerce.number())`).
+[doc]: Zod — Coercion (EN) | https://zod.dev/api#coercion
+
+### Quel est l'inconvénient d'un « barrel » `index.ts` qui réexporte tout un dossier ?
+- [ ] Il empêche l'utilisation de `import type`
+- [x] Importer un seul élément peut charger tout le dossier, ralentir les tests et favoriser les imports circulaires
+- [ ] Il est incompatible avec ESM
+- [ ] Il double la taille du bundle de production
+> Un barrel est pratique pour l'API publique d'un package, mais dans une application il oblige l'outillage (Jest, Vite en dev, tsserver) à évaluer chaque module réexporté. Préférez des imports directs à l'intérieur d'une même base de code.
+[doc]: TypeScript — Modules | https://www.typescriptlang.org/fr/docs/handbook/2/modules.html

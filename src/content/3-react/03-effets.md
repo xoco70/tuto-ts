@@ -195,3 +195,89 @@ useEffect(() => {
 - [ ] Erreur de compilation
 > Sans tableau, l'effet se resynchronise après chaque rendu. `[]` = montage uniquement. Si l'effet modifie l'état sans condition, c'est une boucle infinie.
 [doc]: React — useEffect, paramètres | https://fr.react.dev/reference/react/useEffect#parameters
+
+### Pourquoi l'écouteur `resize` n'est-il jamais retiré ?
+```tsx
+useEffect(() => {
+  window.addEventListener('resize', () => setLargeur(window.innerWidth));
+  return () => window.removeEventListener('resize', () => setLargeur(window.innerWidth));
+}, []);
+```
+- [ ] Parce que `resize` ne peut pas être retiré
+- [x] Parce que `removeEventListener` reçoit une **autre** fonction que celle enregistrée
+- [ ] Parce que le tableau de dépendances est vide
+- [ ] Il est correctement retiré
+> `removeEventListener` compare les références. Il faut déclarer le handler une fois (`const onResize = () => …`) et passer la même fonction aux deux appels. Pour un abonnement à une source externe, `useSyncExternalStore` est encore plus adapté.
+[doc]: React — Synchroniser avec des effets | https://fr.react.dev/learn/synchronizing-with-effects
+
+### Pourquoi ce code est-il refusé ou incorrect ?
+```tsx
+useEffect(async () => {
+  const data = await fetchUser(id);
+  setUser(data);
+}, [id]);
+```
+- [ ] Les effets ne peuvent pas faire d'appel réseau
+- [x] Une fonction `async` retourne une Promise, alors qu'un effet doit retourner rien ou une fonction de nettoyage
+- [ ] Il manque `setUser` dans les dépendances
+- [ ] `await` est interdit dans un composant
+> On déclare la fonction async **à l'intérieur** de l'effet et on l'appelle, en gérant l'annulation (drapeau `ignore` ou `AbortController` dans le cleanup). Ou mieux : TanStack Query ou le data fetching du framework.
+[doc]: React — Charger des données dans un effet | https://fr.react.dev/reference/react/useEffect#fetching-data-with-effects
+
+### Comment annuler une requête `fetch` devenue inutile quand `id` change ?
+- [ ] Ce n'est pas possible
+- [x] Créer un `AbortController` dans l'effet, passer `signal` à `fetch` et appeler `abort()` dans le cleanup
+- [ ] Appeler `fetch.cancel()` au prochain rendu
+- [ ] Retirer `id` des dépendances
+> `abort()` annule réellement la requête réseau (contrairement au drapeau `ignore` qui ignore seulement la réponse). Le `fetch` rejette alors avec une `AbortError`, à ne pas afficher comme une erreur à l'utilisateur.
+[doc]: MDN — AbortController | https://developer.mozilla.org/fr/docs/Web/API/AbortController
+
+### Qu'y a-t-il de problématique dans cette série d'effets ?
+```tsx
+useEffect(() => { if (carte) setOr(carte.or); }, [carte]);
+useEffect(() => { if (or > 3) setManche((m) => m + 1); }, [or]);
+useEffect(() => { if (manche > 5) setFin(true); }, [manche]);
+```
+- [ ] Rien, c'est la façon idiomatique de réagir aux changements
+- [x] Chaque effet déclenche un rendu supplémentaire, et la logique est éparpillée : elle devrait être calculée dans le gestionnaire d'événement
+- [ ] Les effets ne peuvent pas appeler `setState`
+- [ ] Il manque un tableau de dépendances vide
+> Les **chaînes d'effets** provoquent des rendus en cascade et rendent l'ordre des mises à jour difficile à suivre. On calcule tout l'état suivant dans le handler qui réagit à l'action de l'utilisateur, et on dérive ce qui peut l'être pendant le rendu.
+[doc]: React — Chaînes de calculs | https://fr.react.dev/learn/you-might-not-need-an-effect#chains-of-computations
+
+### Comment prévenir le parent qu'un interrupteur a changé d'état ?
+```tsx
+function Interrupteur({ onChange }: { onChange: (v: boolean) => void }) {
+  const [actif, setActif] = useState(false);
+  // ?
+}
+```
+- [ ] `useEffect(() => onChange(actif), [actif])`
+- [x] Appeler `onChange(!actif)` dans le gestionnaire de clic, en même temps que `setActif(!actif)`
+- [ ] Passer `setActif` au parent par une ref
+- [ ] Utiliser un contexte global
+> L'effet ferait un rendu de retard et s'exécuterait aussi au montage. Mettre les deux mises à jour dans le même événement les regroupe en un seul rendu. Encore mieux : rendre le composant entièrement contrôlé par le parent.
+[doc]: React — Informer les parents de changements d'état | https://fr.react.dev/learn/you-might-not-need-an-effect#notifying-parent-components-about-state-changes
+
+### Une initialisation (lecture d'un token, configuration d'un SDK) doit s'exécuter une seule fois par chargement de l'application. Que faire ?
+- [ ] `useEffect(fn, [])` dans `App`, c'est garanti une seule fois
+- [x] L'exécuter au niveau du module (hors composant) ou protéger l'effet avec un drapeau de module
+- [ ] La placer dans le corps du composant `App`
+- [ ] Désactiver `StrictMode`
+> Un effet peut s'exécuter deux fois (StrictMode en dev, remontage). Pour un code qui doit tourner une fois par chargement, un drapeau de niveau module (`let initialise = false`) ou du code exécuté à l'import est plus fiable.
+[doc]: React — Initialiser l'application | https://fr.react.dev/learn/you-might-not-need-an-effect#initializing-the-application
+
+### Qu'affiche ce compteur après plusieurs secondes ?
+```tsx
+const [n, setN] = useState(0);
+useEffect(() => {
+  const id = setInterval(() => setN(n + 1), 1000);
+  return () => clearInterval(id);
+}, []);
+```
+- [ ] Il s'incrémente chaque seconde
+- [x] Il reste bloqué à `1`
+- [ ] Il reste à `0`
+- [ ] Il s'incrémente de plus en plus vite
+> Le callback capture `n` du premier rendu (0) : il calcule `0 + 1` à chaque tick. Correction : l'updater `setN((prev) => prev + 1)`, qui supprime aussi la dépendance à `n`. Le linter `exhaustive-deps` signale ce cas.
+[doc]: React — Mettre à jour l'état à partir de l'état précédent | https://fr.react.dev/learn/removing-effect-dependencies

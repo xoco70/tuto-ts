@@ -194,3 +194,94 @@ Bundle (code splitting, tree-shaking), images (formats modernes, dimensions, laz
 - [x] Limiter les droits des tokens de CI et épingler les actions GitHub
 > Les mises à jour aveugles sont précisément le vecteur des paquets compromis. Revue, délai de quarantaine sur les nouvelles versions et moindre privilège limitent l'exposition.
 [doc]: OWASP — NPM Security Cheat Sheet (EN) | https://cheatsheetseries.owasp.org/cheatsheets/NPM_Security_Cheat_Sheet.html
+
+### React échappe le texte affiché. Quel code reste pourtant vulnérable au XSS ?
+- [ ] `<p>{commentaire}</p>`
+- [x] `<a href={user.siteWeb}>Site</a>` avec une valeur fournie par l'utilisateur
+- [ ] `<input value={recherche} />`
+- [ ] `<p title={commentaire}>…</p>`
+> Une URL `javascript:alert(1)` dans un `href` s'exécute au clic. Il faut valider le schéma (`https:` uniquement) côté serveur et côté client. Autres vecteurs : `dangerouslySetInnerHTML` sans assainissement (DOMPurify), et l'injection dans du HTML généré côté serveur.
+[doc]: OWASP — XSS Prevention Cheat Sheet (EN) | https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html
+
+### Une clé d'API de production a été poussée par erreur dans un dépôt Git. Quelle est l'action prioritaire ?
+- [ ] Supprimer le fichier dans un nouveau commit
+- [x] Révoquer et remplacer la clé immédiatement, puis nettoyer l'historique et chercher des usages suspects
+- [ ] Rendre le dépôt privé
+- [ ] Réécrire l'historique avec `git filter-repo`, cela suffit
+> Une fois poussé, un secret doit être considéré comme **compromis** : il peut avoir été cloné, mis en cache ou indexé par des robots en quelques minutes. Prévention : secrets dans un gestionnaire dédié, `.env` dans `.gitignore`, détection de secrets en pre-commit et en CI.
+[doc]: OWASP — Secrets Management Cheat Sheet (EN) | https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html
+
+### Comment fonctionne un rate limiter en « seau à jetons » (*token bucket*) ?
+- [ ] Il refuse toute requête au-delà de N par minute calendaire
+- [x] Le seau se remplit à débit constant jusqu'à une capacité maximale ; chaque requête consomme un jeton, et sans jeton elle est refusée
+- [ ] Il met les requêtes en file d'attente indéfiniment
+- [ ] Il bloque l'IP pendant une heure au premier dépassement
+> Ce modèle autorise de courtes **rafales** (jusqu'à la capacité) tout en bornant le débit moyen. La fenêtre fixe, plus simple, laisse passer le double de requêtes à la jonction de deux fenêtres.
+[doc]: Wikipédia — Seau à jetons | https://fr.wikipedia.org/wiki/Seau_%C3%A0_jetons
+
+### À quoi sert l'en-tête `Strict-Transport-Security` ?
+- [ ] À chiffrer le corps des réponses
+- [x] À obliger le navigateur à n'utiliser que HTTPS pour ce domaine pendant une durée donnée
+- [ ] À bloquer les requêtes cross-origin
+- [ ] À signer les cookies
+> HSTS empêche une première requête en HTTP clair interceptable (attaque de *downgrade* sur un Wi-Fi public). `includeSubDomains` étend la règle aux sous-domaines ; à activer seulement quand tout est servi en HTTPS.
+[doc]: MDN — Strict-Transport-Security | https://developer.mozilla.org/fr/docs/Web/HTTP/Reference/Headers/Strict-Transport-Security
+
+### Comment savoir pourquoi une requête SQL est lente ?
+- [ ] Ajouter des index sur toutes les colonnes
+- [x] Lancer `EXPLAIN ANALYZE` pour voir le plan réel : parcours séquentiels, estimations erronées, tris coûteux
+- [ ] Augmenter la RAM du serveur
+- [ ] Passer à une base NoSQL
+> Le plan montre si un index est utilisé (`Index Scan`) ou non (`Seq Scan`), et l'écart entre lignes estimées et réelles. Attention : `ANALYZE` exécute vraiment la requête, à envelopper dans une transaction annulée pour un `UPDATE` ou un `DELETE`.
+[doc]: PostgreSQL — Using EXPLAIN (EN) | https://www.postgresql.org/docs/current/using-explain.html
+
+### Comment mettre en cache les fichiers JS/CSS d'un build Vite (noms du type `index-a1b2c3.js`) ?
+- [ ] `Cache-Control: no-store`
+- [x] `Cache-Control: public, max-age=31536000, immutable`, et `no-cache` pour `index.html`
+- [ ] Ne rien envoyer, le navigateur décide
+- [ ] Le même `max-age` court pour tous les fichiers
+> Le hash dans le nom change à chaque modification du contenu : ces fichiers peuvent être gardés « pour toujours ». Seul `index.html`, qui les référence, doit être revalidé à chaque visite pour que les utilisateurs récupèrent la nouvelle version.
+[doc]: MDN — Cache-Control | https://developer.mozilla.org/fr/docs/Web/HTTP/Reference/Headers/Cache-Control
+
+### Comment empêcher qu'un site malveillant affiche votre application dans une `<iframe>` invisible pour piéger les clics (*clickjacking*) ?
+- [ ] Avec `HttpOnly` sur les cookies
+- [x] Avec la directive CSP `frame-ancestors 'none'` (ou `'self'`), ou l'ancien en-tête `X-Frame-Options: DENY`
+- [ ] Avec CORS
+- [ ] Avec un captcha
+> CORS ne contrôle pas l'intégration en iframe. `frame-ancestors` précise quelles origines peuvent encadrer la page ; `helmet` pose ces en-têtes par défaut.
+[doc]: MDN — CSP frame-ancestors | https://developer.mozilla.org/fr/docs/Web/HTTP/Reference/Headers/Content-Security-Policy/frame-ancestors
+
+### Avec quels droits l'application doit-elle se connecter à la base de données en production ?
+- [ ] Ceux du superutilisateur `postgres`, pour éviter les erreurs
+- [x] Un rôle dédié limité aux opérations nécessaires (lecture/écriture sur ses tables), distinct du rôle qui exécute les migrations
+- [ ] Un rôle en lecture seule
+- [ ] Peu importe, la base n'est pas exposée sur Internet
+> Principe du **moindre privilège** : si l'application est compromise (injection SQL, RCE), l'attaquant ne peut pas supprimer des schémas, lire d'autres bases ou créer des utilisateurs.
+[doc]: OWASP — Database Security Cheat Sheet (EN) | https://cheatsheetseries.owasp.org/cheatsheets/Database_Security_Cheat_Sheet.html
+
+### Pourquoi utiliser `npm ci` plutôt que `npm install` en CI et dans un Dockerfile ?
+- [ ] `npm ci` est plus récent
+- [x] `npm ci` installe exactement ce que décrit `package-lock.json`, échoue s'il n'est pas synchronisé, et part d'un `node_modules` vide
+- [ ] `npm ci` n'installe pas les dépendances de développement
+- [ ] `npm ci` met à jour les dépendances vers leur dernière version
+> Les builds deviennent reproductibles : pas de résolution de nouvelle version mineure entre deux builds, et un lockfile désynchronisé est détecté au lieu d'être silencieusement réécrit.
+[doc]: npm — npm ci (EN) | https://docs.npmjs.com/cli/commands/npm-ci
+
+### Une API reçoit 200 requêtes par seconde et chaque requête dure en moyenne 50 ms. Combien de requêtes sont en cours simultanément, en moyenne ?
+- [ ] 4
+- [x] 10
+- [ ] 50
+- [ ] 200
+> **Loi de Little** : concurrence = débit × temps de séjour = 200 × 0,05 = 10. Si la latence passe à 500 ms (base lente), on monte à 100 requêtes en cours — de quoi épuiser un pool de connexions de 20. Utile en entretien de system design.
+[doc]: Wikipédia — Loi de Little | https://fr.wikipedia.org/wiki/Loi_de_Little
+
+### Comment accélérer ce code quand `commandes` et `clientsVip` contiennent chacun 50 000 éléments ?
+```ts
+const vip = commandes.filter((c) => clientsVip.includes(c.clientId));
+```
+- [ ] Remplacer `filter` par une boucle `for`
+- [x] Construire un `Set` : `const ids = new Set(clientsVip)` puis `ids.has(c.clientId)`
+- [ ] Trier les deux tableaux
+- [ ] Utiliser `Promise.all`
+> `includes` parcourt le tableau à chaque appel : O(n × m), soit 2,5 milliards de comparaisons. `Set.has` est en temps quasi constant : O(n + m). C'est le genre de goulot qui apparaît quand un jeu de données grossit.
+[doc]: MDN — Set | https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Global_Objects/Set

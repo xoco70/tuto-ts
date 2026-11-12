@@ -207,3 +207,82 @@ function Article({ titre }: { titre: string }) {
 - [ ] Dans le `return` du composant
 > Une action déclenchée par l'utilisateur va dans le gestionnaire d'événement. Passer par un état + `useEffect` ajoute un rendu inutile et des bugs. Les effets servent à **synchroniser** avec un système externe.
 [doc]: React — Vous n'avez peut-être pas besoin d'un effet | https://fr.react.dev/learn/you-might-not-need-an-effect
+
+### Quel est le bug de ce bouton ?
+```tsx
+<button onClick={supprimer(id)}>Supprimer</button>
+```
+- [ ] Aucun
+- [x] `supprimer(id)` est **appelé pendant le rendu**, pas au clic
+- [ ] `onClick` doit s'écrire `onclick`
+- [ ] Il faut écrire `onClick="supprimer(id)"`
+> `onClick` attend une **fonction**. Ici on lui passe le résultat de l'appel, exécuté à chaque rendu (et potentiellement en boucle si la fonction modifie l'état). Correction : `onClick={() => supprimer(id)}`.
+[doc]: React — Réagir aux événements | https://fr.react.dev/learn/responding-to-events
+
+### Pourquoi écrit-on `style={{ color: 'red', fontSize: 14 }}` avec deux paires d'accolades ?
+- [ ] C'est une syntaxe spéciale de JSX pour les styles
+- [x] La première paire ouvre une expression JS, la seconde est un objet littéral
+- [ ] Pour échapper le CSS
+- [ ] Pour activer les CSS Modules
+> En JSX, `style` reçoit un **objet** dont les clés sont en camelCase (`fontSize`, pas `font-size`). Les nombres sont interprétés en pixels pour la plupart des propriétés.
+[doc]: React — JavaScript dans JSX avec les accolades | https://fr.react.dev/learn/javascript-in-jsx-with-curly-braces
+
+### Quand la valeur par défaut `taille = 100` est-elle utilisée ?
+```tsx
+function Avatar({ taille = 100 }: { taille?: number }) {}
+```
+- [ ] Quand `taille` vaut `0`
+- [x] Quand la prop est absente ou vaut `undefined`
+- [ ] Quand la prop vaut `null`
+- [ ] Toujours, la prop est ignorée
+> Les valeurs par défaut de la déstructuration ne s'appliquent qu'à `undefined`. Avec `<Avatar taille={null} />` ou `taille={0}`, la valeur fournie est conservée.
+[doc]: React — Valeur par défaut d'une prop | https://fr.react.dev/learn/passing-props-to-a-component
+
+### Que faut-il appeler pour empêcher le rechargement de la page à la soumission d'un `<form onSubmit={…}>` ?
+- [ ] `e.stopPropagation()`
+- [x] `e.preventDefault()`
+- [ ] `return false` dans le handler
+- [ ] Rien, React l'empêche automatiquement
+> Le comportement natif d'un formulaire est de naviguer vers son `action`. `preventDefault()` l'annule. (Avec les Actions de React 19, `<form action={fn}>`, React s'en charge pour vous.)
+[doc]: React — Empêcher le comportement par défaut | https://fr.react.dev/learn/responding-to-events
+
+### Une `key` doit-elle être unique dans toute l'application ?
+- [ ] Oui, comme un `id` HTML
+- [x] Non : uniquement parmi les éléments frères d'une même liste
+- [ ] Oui, sinon React lève une erreur
+- [ ] Non, elle peut même être dupliquée dans la même liste
+> React utilise la `key` pour associer un élément à son précédent rendu **au sein de la même liste**. Deux listes différentes peuvent réutiliser les mêmes clés. La clé doit en revanche rester stable entre les rendus.
+[doc]: React — Règles des clés | https://fr.react.dev/learn/rendering-lists#rules-of-keys
+
+### Pourquoi l'input perd-il le focus à chaque frappe ?
+```tsx
+function Formulaire() {
+  const [texte, setTexte] = useState('');
+  function Champ() {
+    return <input value={texte} onChange={(e) => setTexte(e.target.value)} />;
+  }
+  return <Champ />;
+}
+```
+- [ ] Parce que l'input n'a pas de `key`
+- [x] Parce que `Champ` est redéfini à chaque rendu : React y voit un nouveau type de composant et recrée l'input
+- [ ] Parce qu'il manque `useCallback`
+- [ ] Parce que `onChange` est asynchrone
+> Une fonction composant déclarée **dans** un autre composant est une nouvelle fonction à chaque rendu : React démonte l'ancien sous-arbre et monte le nouveau, en perdant l'état et le focus. Les composants se déclarent toujours au niveau du module.
+[doc]: React — Préserver et réinitialiser l'état | https://fr.react.dev/learn/preserving-and-resetting-state
+
+### Que fait `<StrictMode>` ?
+- [ ] Il active le mode strict de TypeScript
+- [x] En développement, il double certains rendus et effets pour révéler les impuretés et les nettoyages manquants
+- [ ] Il interdit les composants classes
+- [ ] Il ralentit l'application en production
+> `StrictMode` n'a aucun effet en production. Il rend visibles les bugs qui apparaîtraient avec le rendu concurrent ou le Fast Refresh : effets sans cleanup, mutations pendant le rendu, API dépréciées.
+[doc]: React — StrictMode | https://fr.react.dev/reference/react/StrictMode
+
+### Que doit retourner un composant qui ne doit rien afficher dans certains cas ?
+- [ ] `undefined`, obligatoirement
+- [x] `null`
+- [ ] `false` n'est pas autorisé
+- [ ] Une `<div hidden>` vide
+> Retourner `null` est l'usage idiomatique. (Depuis React 18, retourner `undefined` ne lève plus d'erreur, mais `null` exprime clairement l'intention.) Attention : le composant reste monté et ses hooks s'exécutent ; le parent peut aussi ne pas le rendre du tout.
+[doc]: React — Ne rien renvoyer avec null | https://fr.react.dev/learn/conditional-rendering

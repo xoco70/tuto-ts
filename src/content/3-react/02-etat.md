@@ -246,3 +246,83 @@ const [user, setUser] = useState({ nom: 'Ada', ville: 'Londres' });
 - [ ] Rien, utiliser une variable globale
 > Stocker une copie duplique la donnée : si le produit est modifié dans la liste, la sélection affiche une version obsolète. Un id reste la source unique.
 [doc]: React — Éviter la duplication de l'état | https://fr.react.dev/learn/choosing-the-state-structure#avoid-duplication-in-state
+
+### Que se passe-t-il ?
+```tsx
+const [fn, setFn] = useState<() => void>(() => () => {});
+setFn(maFonction);
+```
+- [ ] `fn` devient `maFonction`
+- [x] React appelle `maFonction` comme fonction de mise à jour et stocke ce qu'elle retourne
+- [ ] Une erreur, l'état ne peut pas contenir de fonction
+- [ ] `fn` devient `undefined` au prochain rendu seulement
+> Quand on passe une fonction à `setState`, React la traite comme un **updater** `(prev) => next`. Pour stocker une fonction, il faut l'envelopper : `setFn(() => maFonction)`. Même chose pour la valeur initiale de `useState`.
+[doc]: React — Stocker une fonction dans l'état | https://fr.react.dev/reference/react/useState#im-trying-to-set-state-to-a-function-but-it-gets-called-instead
+
+### Que fait React si on appelle `setNom('Alice')` alors que `nom` vaut déjà `'Alice'` ?
+- [ ] Il re-rend toujours le composant et ses enfants
+- [x] Il compare avec `Object.is` et évite en général de re-rendre le composant et ses enfants
+- [ ] Il lève un warning
+- [ ] Il met l'état à `undefined`
+> C'est pourquoi muter un objet puis appeler `setState(memeObjet)` ne déclenche rien : la référence est identique. Il faut toujours fournir une **nouvelle** référence pour un objet ou un tableau modifié.
+[doc]: React — useState, fonction set | https://fr.react.dev/reference/react/useState
+
+### Que vaut `n` après un clic, s'il valait 0 ?
+```tsx
+function handleClick() {
+  setN(n + 5);
+  setN((prev) => prev + 1);
+}
+```
+- [ ] `1`
+- [ ] `5`
+- [x] `6`
+- [ ] `0`
+> React traite la file dans l'ordre : `n + 5` remplace la valeur par 5, puis l'updater reçoit 5 et retourne 6. Mélanger les deux formes est légal, mais l'updater est le seul à toujours partir de la dernière valeur en file.
+[doc]: React — Mettre en file une série de mises à jour | https://fr.react.dev/learn/queueing-a-series-of-state-updates
+
+### Le compteur garde sa valeur quand `estJoueurA` change. Pourquoi ?
+```tsx
+{estJoueurA ? <Compteur nom="A" /> : <Compteur nom="B" />}
+```
+- [ ] C'est un bug de React
+- [x] Même type de composant à la même position : React considère que c'est le même composant et conserve l'état
+- [ ] Parce que `Compteur` utilise `memo`
+- [ ] Parce que les props sont identiques
+> L'état est associé à une **position dans l'arbre**, pas à l'élément JSX. Pour obtenir deux compteurs indépendants : `key="A"` / `key="B"`, ou les rendre à deux positions différentes.
+[doc]: React — Préserver et réinitialiser l'état | https://fr.react.dev/learn/preserving-and-resetting-state
+
+### Pourquoi préférer `status: 'idle' | 'loading' | 'success' | 'error'` à trois booléens `isLoading`, `isSuccess`, `isError` ?
+- [ ] Pour économiser de la mémoire
+- [x] Pour rendre impossibles les états contradictoires (ex. `isLoading` et `isError` vrais en même temps)
+- [ ] Parce que React n'accepte pas plusieurs booléens
+- [ ] Ce n'est qu'une préférence de style
+> Trois booléens donnent 8 combinaisons, dont la plupart n'ont pas de sens. Une seule variable de statut (ou une union discriminée avec les données) supprime ces cas et simplifie le rendu.
+[doc]: React — Éviter les contradictions dans l'état | https://fr.react.dev/learn/choosing-the-state-structure
+
+### Que permet la librairie Immer (`useImmer`, ou `produce` dans un reducer) ?
+- [ ] De muter l'état directement sans conséquence
+- [x] D'écrire une mise à jour « mutante » sur un brouillon, qui produit en réalité un nouvel objet immuable
+- [ ] De stocker l'état dans le `localStorage`
+- [ ] De remplacer `useState`
+> Avec `updateForm((draft) => { draft.adresse.ville = 'Lyon'; })`, Immer calcule un nouvel objet en ne copiant que ce qui change. Utile pour les objets profondément imbriqués ; Redux Toolkit l'utilise par défaut.
+[doc]: React — Écrire une logique de mise à jour concise avec Immer | https://fr.react.dev/learn/updating-objects-in-state#write-concise-update-logic-with-immer
+
+### Comment gérer plusieurs champs de formulaire avec un seul handler ?
+```tsx
+const [form, setForm] = useState({ nom: '', email: '' });
+```
+- [ ] `form[e.target.name] = e.target.value`
+- [x] `setForm({ ...form, [e.target.name]: e.target.value })`
+- [ ] `setForm(e.target)`
+- [ ] Un `useState` par caractère saisi
+> Le nom de propriété calculé `[e.target.name]` cible le bon champ, et le spread produit un nouvel objet. Pour des formulaires riches (validation, erreurs, champs imbriqués), une librairie comme React Hook Form évite de re-rendre tout le formulaire à chaque frappe.
+[doc]: React — Mettre à jour un objet dans l'état | https://fr.react.dev/learn/updating-objects-in-state
+
+### Comment supprimer l'élément d'id `id` d'une liste en état ?
+- [ ] `items.splice(index, 1); setItems(items)`
+- [x] `setItems(items.filter((item) => item.id !== id))`
+- [ ] `delete items[index]; setItems(items)`
+- [ ] `setItems(items.pop())`
+> `filter` renvoie un **nouveau** tableau. `splice` et `delete` mutent l'original (et la référence ne change pas, donc pas de re-rendu fiable) ; `pop` retourne l'élément retiré, pas le tableau.
+[doc]: React — Mettre à jour les tableaux d'un état | https://fr.react.dev/learn/updating-arrays-in-state

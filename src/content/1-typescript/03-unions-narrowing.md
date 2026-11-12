@@ -288,3 +288,126 @@ function aire(f: Forme) {
 - [ ] Oui, mais `f.c` est `any`
 > L'analyse de flux exclut le membre `cercle` après le `return` : il ne reste que `carre`. Pas besoin de `else` ni de `switch`.
 [doc]: Handbook — Discriminated unions | https://www.typescriptlang.org/fr/docs/handbook/2/narrowing.html
+
+### Quel est le type de `x` dans le bloc `if` ?
+```ts
+function f(x: string[] | string | null) {
+  if (typeof x === 'object') {
+    x;
+  }
+}
+```
+- [ ] `string[]`
+- [x] `string[] | null`
+- [ ] `object`
+- [ ] `never`
+> Piège classique : `typeof null === 'object'`. Le narrowing conserve donc `null`. Il faut ajouter `x !== null` (ou tester `if (x && typeof x === 'object')`) pour obtenir `string[]`.
+[doc]: Handbook — typeof type guards | https://www.typescriptlang.org/fr/docs/handbook/2/narrowing.html
+
+### Quel est le bug de cette fonction ?
+```ts
+function afficher(nb: number | undefined) {
+  if (nb) {
+    return `${nb} articles`;
+  }
+  return 'Panier non chargé';
+}
+```
+- [ ] Aucun
+- [x] Pour `nb = 0`, elle affiche « Panier non chargé »
+- [ ] Elle ne compile pas car `nb` peut être `undefined`
+- [ ] `nb` est de type `number | undefined` dans le `if`
+> Le narrowing par « truthiness » exclut aussi `0`, `''` et `NaN`. Quand `0` est une valeur légitime, testez explicitement `nb !== undefined` (ou `nb != null`).
+[doc]: Handbook — Truthiness narrowing | https://www.typescriptlang.org/fr/docs/handbook/2/narrowing.html
+
+### Quel est le type de `x` dans le bloc `if` ?
+```ts
+function f(x: string | number, y: string | boolean) {
+  if (x === y) {
+    x;
+  }
+}
+```
+- [ ] `string | number`
+- [x] `string`
+- [ ] `never`
+- [ ] `string | number | boolean`
+> Le narrowing par **égalité** : si `x === y`, les deux ont forcément le même type, donc le seul type commun, `string`. TS affine `x` et `y` en `string` dans le bloc.
+[doc]: Handbook — Equality narrowing | https://www.typescriptlang.org/fr/docs/handbook/2/narrowing.html
+
+### Que se passe-t-il à la dernière ligne ?
+```ts
+let x = Math.random() < 0.5 ? 10 : 'bonjour';
+x = 1;
+x = true;
+```
+- [ ] Rien, `x` est de type `number` après `x = 1`
+- [x] Erreur : `boolean` n'est pas assignable à `string | number`
+- [ ] `x` devient `string | number | boolean`
+- [ ] Erreur à la ligne `x = 1`
+> Après `x = 1`, TS **affine** `x` en `number` pour la suite du flux, mais le **type déclaré** (ici inféré `string | number`) reste la référence pour les affectations. On peut donc réaffecter une chaîne, pas un booléen.
+[doc]: Handbook — Assignments | https://www.typescriptlang.org/fr/docs/handbook/2/narrowing.html
+
+### Depuis TS 4.9, quel est le type de `value` dans le bloc ?
+```ts
+function f(value: unknown) {
+  if (typeof value === 'object' && value !== null && 'id' in value) {
+    value;
+  }
+}
+```
+- [ ] `unknown`
+- [ ] `{ id: any }`
+- [x] `object & Record<'id', unknown>`
+- [ ] `never`
+> Depuis TS 4.9, l'opérateur `in` appliqué à une clé absente du type **ajoute** la propriété avec le type `unknown`. On peut donc lire `value.id` (de type `unknown`) et continuer à l'affiner. Pour des données réellement externes, un schéma Zod reste plus lisible.
+[doc]: TypeScript 4.9 — narrowing avec in | https://www.typescriptlang.org/docs/handbook/release-notes/typescript-4-9.html
+
+### Ce code compile-t-il ?
+```ts
+interface User { address?: { city: string } }
+function ville(user: User | undefined) {
+  if (user?.address) {
+    return user.address.city;
+  }
+}
+```
+- [x] Oui : si `user?.address` est truthy, TS sait que `user` et `user.address` sont définis
+- [ ] Non : `user` peut être `undefined` dans le bloc
+- [ ] Non : il faut écrire `user!.address!.city`
+- [ ] Oui, mais seulement avec `strict: false`
+> Le contrôle de flux comprend le chaînage optionnel : un résultat truthy implique que chaque maillon intermédiaire existe. Inutile d'empiler les `!`.
+[doc]: Handbook — Narrowing | https://www.typescriptlang.org/fr/docs/handbook/2/narrowing.html
+
+### Quel est le type de `x` dans le bloc ?
+```ts
+function f(x: string | string[]) {
+  if (Array.isArray(x)) {
+    x;
+  }
+}
+```
+- [ ] `string | string[]`
+- [x] `string[]`
+- [ ] `any[]`
+- [ ] `object`
+> `Array.isArray` est déclaré comme type guard (`arg is any[]`), TS l'utilise pour affiner l'union. À noter : `typeof x === 'object'` n'aurait pas permis de distinguer un tableau d'un autre objet.
+[doc]: Handbook — Narrowing | https://www.typescriptlang.org/fr/docs/handbook/2/narrowing.html
+
+### Depuis TS 5.3, ce code compile-t-il ?
+```ts
+function f(x: string | number) {
+  switch (true) {
+    case typeof x === 'string':
+      return x.toUpperCase();
+    default:
+      return x.toFixed(2);
+  }
+}
+```
+- [x] Oui : TS affine `x` dans chaque `case` d'un `switch (true)`
+- [ ] Non : `x` reste `string | number` dans les `case`
+- [ ] Non : `switch (true)` est interdit en TypeScript
+- [ ] Oui, mais seulement le premier `case` est affiné
+> TS 5.3 a ajouté le narrowing dans `switch (true)` : chaque condition de `case` affine le type, et le `default` reçoit ce qui reste. Pratique pour remplacer une longue chaîne de `if / else if`.
+[doc]: TypeScript 5.3 — switch (true) narrowing | https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-3.html

@@ -203,3 +203,75 @@ function Survol({ children }: { children: React.ReactNode }) {
 - [x] Simuler le réseau avec MSW
 > Tester l'état interne lie le test à l'implémentation : un refactoring (useState → useReducer) le casserait sans changer le comportement.
 [doc]: Testing Library — Guiding principles (EN) | https://testing-library.com/docs/guiding-principles
+
+### Quel outil utiliser en premier pour savoir quels composants re-rendent et combien de temps cela prend ?
+- [ ] Ajouter `memo` partout puis comparer
+- [x] Le Profiler des React DevTools
+- [ ] `console.time` dans chaque composant
+- [ ] Lighthouse
+> On **mesure** avant d'optimiser. Le Profiler montre chaque commit, les composants rendus, leur durée et la raison du rendu (« why did this render »). Lighthouse évalue la page globale, pas les rendus React.
+[doc]: React — Profiler | https://fr.react.dev/reference/react/Profiler
+
+### Pourquoi préférer `userEvent` à `fireEvent` dans Testing Library ?
+- [ ] `fireEvent` est déprécié
+- [x] `userEvent` simule une interaction complète (focus, keydown, input, keyup, click…) comme un vrai utilisateur
+- [ ] `userEvent` est synchrone, donc plus simple
+- [ ] `fireEvent` ne fonctionne pas avec React
+> `fireEvent.change` envoie un seul événement ; `await user.type(input, 'bonjour')` déclenche toute la séquence clavier, ce qui révèle des bugs (handlers `onKeyDown`, champs désactivés). Les méthodes de `userEvent` sont asynchrones : pensez à `await`.
+[doc]: Testing Library — user-event (EN) | https://testing-library.com/docs/user-event/intro
+
+### Quelle métrique Core Web Vitals mesure le temps d'affichage du plus grand élément visible (image principale, titre) ?
+- [ ] INP
+- [ ] CLS
+- [x] LCP
+- [ ] TTFB
+> Le **Largest Contentful Paint** devrait être inférieur à 2,5 s. Leviers : temps de réponse serveur, image principale préchargée et non lazy-loadée, SSR plutôt qu'un écran blanc qui attend le JS.
+[doc]: web.dev — LCP | https://web.dev/articles/lcp?hl=fr
+
+### Quelle est la cause la plus fréquente d'un mauvais score CLS (Cumulative Layout Shift) ?
+- [ ] Un bundle JS trop gros
+- [x] Des images, publicités ou contenus chargés sans espace réservé, qui poussent le reste de la page
+- [ ] Trop de re-rendus React
+- [ ] Une API lente
+> On réserve l'espace avec `width`/`height` (ou `aspect-ratio`) sur les images, des skeletons de taille fixe, et on évite d'insérer du contenu au-dessus de ce que l'utilisateur lit.
+[doc]: web.dev — CLS | https://web.dev/articles/cls?hl=fr
+
+### Un test affiche le warning « An update to X inside a test was not wrapped in act(...) ». Que signifie-t-il le plus souvent ?
+- [ ] Qu'il faut envelopper chaque ligne du test dans `act`
+- [x] Qu'une mise à jour d'état asynchrone survient après la fin des assertions : il faut l'attendre (`findBy…`, `waitFor`)
+- [ ] Que le composant a une fuite mémoire
+- [ ] Que React n'est pas installé en mode test
+> Testing Library enveloppe déjà `render` et les événements dans `act`. Le warning révèle presque toujours un effet ou une requête qui se termine après le test : attendre l'état final rend le test fidèle et fait disparaître le message.
+[doc]: React — act | https://fr.react.dev/reference/react/act
+
+### Quel est le principal défaut des tests par snapshot de gros composants ?
+- [ ] Ils sont lents
+- [x] Ils cassent à chaque changement de rendu et finissent mis à jour sans relecture : ils ne vérifient plus rien
+- [ ] Ils ne fonctionnent pas avec TypeScript
+- [ ] Ils nécessitent un navigateur réel
+> Un snapshot de 300 lignes ne dit pas ce qui compte. Réservez-les à des sorties petites et stables (un sérialiseur, un message d'erreur) et préférez des assertions explicites sur ce que voit l'utilisateur.
+[doc]: Jest — Snapshot testing (EN) | https://jestjs.io/docs/snapshot-testing
+
+### Quel rôle donner aux tests end-to-end (Playwright, Cypress) ?
+- [ ] Couvrir chaque cas limite de chaque formulaire
+- [x] Vérifier quelques parcours critiques (connexion, paiement) dans un vrai navigateur, contre une application déployée
+- [ ] Remplacer les tests d'intégration
+- [ ] Mesurer la couverture de code
+> Les tests e2e donnent la plus grande confiance mais sont lents et plus fragiles. On les garde peu nombreux et ciblés ; les variantes se testent plus bas (composants, API).
+[doc]: Playwright — Introduction (EN) | https://playwright.dev/docs/intro
+
+### Comment faire annoncer par un lecteur d'écran un message « Commande enregistrée » apparu après une action ?
+- [ ] Avec `alert()`
+- [x] Avec une zone `aria-live="polite"` (ou `role="status"`) présente dans le DOM dans laquelle on insère le message
+- [ ] Avec `tabIndex={0}` sur le message
+- [ ] Avec une couleur verte contrastée
+> Les lecteurs d'écran ne lisent pas automatiquement le contenu qui apparaît. Une région live, montée **avant** que le message n'y soit inséré, annonce les changements sans déplacer le focus. `role="alert"` est réservé aux messages urgents.
+[doc]: MDN — aria-live | https://developer.mozilla.org/fr/docs/Web/Accessibility/ARIA/Reference/Attributes/aria-live
+
+### Que distingue-t-on entre « données de laboratoire » et « données terrain » en performance web ?
+- [ ] Rien, ce sont deux noms de Lighthouse
+- [x] Le labo (Lighthouse) mesure dans un environnement contrôlé ; le terrain (CrUX, RUM) mesure les vrais utilisateurs, appareils et réseaux
+- [ ] Le terrain ne concerne que les applications mobiles
+- [ ] Le labo est toujours plus pessimiste
+> Lighthouse est idéal pour déboguer et comparer, mais Google classe sur les données terrain. Un site rapide sur un MacBook peut avoir un INP médiocre sur des téléphones d'entrée de gamme.
+[doc]: web.dev — Données de laboratoire et données terrain | https://web.dev/articles/lab-and-field-data-differences?hl=fr

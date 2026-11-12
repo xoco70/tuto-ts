@@ -283,3 +283,99 @@ type R = IsNever<never>;
 - [ ] `Pick`
 > `Pick`, `Omit`, `Partial`, `Required`, `Readonly` transforment les propriétés d'un type objet. `Exclude`, `Extract` et `NonNullable` (= `T & {}`) filtrent des unions.
 [doc]: Utility types (EN) | https://www.typescriptlang.org/docs/handbook/utility-types.html
+
+### Quel est le type de `Evenement` ?
+```ts
+type Evenement = `on${Capitalize<'click' | 'focus'>}`;
+```
+- [ ] `string`
+- [ ] `'onclick' | 'onfocus'`
+- [x] `'onClick' | 'onFocus'`
+- [ ] `` `on${string}` ``
+> Un template literal type appliqué à une union est **distribué** sur chaque membre. `Capitalize`, `Uncapitalize`, `Uppercase` et `Lowercase` sont des utilitaires intrinsèques pour manipuler les littéraux de chaîne.
+[doc]: Handbook — Template literal types | https://www.typescriptlang.org/fr/docs/handbook/2/template-literal-types.html
+
+### Quel est le type de `Cles` ?
+```ts
+type Cles = keyof { [cle: string]: boolean };
+```
+- [ ] `string`
+- [x] `string | number`
+- [ ] `never`
+- [ ] `PropertyKey`
+> En JavaScript, les clés numériques sont converties en chaînes (`obj[0]` équivaut à `obj['0']`). Une signature d'index `string` accepte donc aussi les clés `number`, et `keyof` renvoie `string | number`.
+[doc]: Handbook — keyof | https://www.typescriptlang.org/fr/docs/handbook/2/keyof-types.html
+
+### Comment obtenir le type de l'objet retourné par `creerUser` sans le réécrire ?
+```ts
+function creerUser() {
+  return { id: 1, nom: 'Alice', admin: false };
+}
+```
+- [ ] `type U = ReturnType<creerUser>`
+- [x] `type U = ReturnType<typeof creerUser>`
+- [ ] `type U = typeof creerUser()`
+- [ ] `type U = Awaited<creerUser>`
+> `ReturnType` attend un **type** de fonction : `typeof` fait le pont entre l'espace des valeurs et celui des types. Pour une fonction `async`, on combine : `Awaited<ReturnType<typeof fn>>`.
+[doc]: Handbook — typeof | https://www.typescriptlang.org/fr/docs/handbook/2/typeof-types.html
+
+### Quel est le type de `R` ?
+```ts
+type EstString<T> = [T] extends [string] ? true : false;
+type R = EstString<string | number>;
+```
+- [ ] `boolean`
+- [ ] `true`
+- [x] `false`
+- [ ] `never`
+> Entourer `T` de crochets **désactive la distributivité** : on teste l'union entière, et `string | number` n'est pas assignable à `string`. Sans crochets (`T extends string ? …`), le résultat aurait été distribué : `true | false`, soit `boolean`.
+[doc]: Handbook — Distributive conditional types | https://www.typescriptlang.org/fr/docs/handbook/2/conditional-types.html
+
+### Que produit ce mapped type ?
+```ts
+type Modifiable<T> = { -readonly [K in keyof T]-?: T[K] };
+type R = Modifiable<{ readonly id: number; nom?: string }>;
+```
+- [ ] `{ readonly id: number; nom?: string }`
+- [x] `{ id: number; nom: string }`
+- [ ] `{ id: number; nom: string | undefined }`
+- [ ] Une erreur de syntaxe
+> Les préfixes `-` et `+` ajoutent ou retirent les modificateurs `readonly` et `?`. `-?` est exactement ce que fait l'utilitaire `Required<T>` ; `-readonly` n'a pas d'équivalent intégré.
+[doc]: Handbook — Mapping modifiers | https://www.typescriptlang.org/fr/docs/handbook/2/mapped-types.html
+
+### Quelles valeurs ne sont **pas** assignables à ce type ? (plusieurs réponses)
+```ts
+type Json = string | number | boolean | null | Json[] | { [cle: string]: Json };
+```
+- [ ] `{ tags: ['a', 1, null] }`
+- [ ] `'texte'`
+- [x] `{ a: undefined }`
+- [x] `{ calcul: () => 42 }`
+> Un alias de type peut être **récursif**. Ce type décrit fidèlement ce que `JSON.stringify` sait représenter : `undefined` et les fonctions en sont exclus (ils sont omis à la sérialisation), tout comme `Date` (devenue une chaîne).
+[doc]: Handbook — Objets et alias de types | https://www.typescriptlang.org/fr/docs/handbook/2/objects.html
+
+### Comment obtenir le type `number` du prix d'une ligne de commande ?
+```ts
+interface Commande {
+  lignes: { produit: string; prix: number }[];
+}
+```
+- [ ] `Commande.lignes.prix`
+- [ ] `Commande['lignes']['prix']`
+- [x] `Commande['lignes'][number]['prix']`
+- [ ] `typeof Commande.lignes[0].prix`
+> L'accès indexé `T['cle']` se chaîne. `[number]` donne le type des éléments d'un tableau. Utile pour typer un composant `<LigneCommande>` sans dupliquer la définition.
+[doc]: Handbook — Indexed access types | https://www.typescriptlang.org/fr/docs/handbook/2/indexed-access-types.html
+
+### Pourquoi écrire `string & K` dans ce mapped type ?
+```ts
+type Getters<T> = {
+  [K in keyof T as `get${Capitalize<string & K>}`]: () => T[K];
+};
+```
+- [ ] Pour rendre les clés optionnelles
+- [x] Parce que `keyof T` peut contenir des `number` et des `symbol`, que `Capitalize` n'accepte pas
+- [ ] Pour forcer les valeurs à être des chaînes
+- [ ] C'est inutile, `K` est toujours une `string`
+> `keyof T` est de type `string | number | symbol`. L'intersection `string & K` ne garde que les clés chaînes (les autres deviennent `never` et disparaissent). `Getters<{ nom: string }>` donne `{ getNom: () => string }`.
+[doc]: Handbook — Key remapping via as | https://www.typescriptlang.org/fr/docs/handbook/2/mapped-types.html

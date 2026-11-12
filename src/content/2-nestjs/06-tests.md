@@ -203,3 +203,67 @@ De plus en plus de projets Nest migrent de Jest à **Vitest** (plus rapide, ESM 
 - [x] Contrôler l'horloge et les appels externes
 > Des tests interdépendants échouent en cascade et ne peuvent pas tourner en parallèle ou dans un ordre aléatoire.
 [doc]: NestJS — Testing (EN) | https://docs.nestjs.com/fundamentals/testing
+
+### Quelle est la différence entre `jest.fn()` et `jest.spyOn(objet, 'methode')` ?
+- [ ] Aucune
+- [x] `spyOn` observe une méthode existante (en appelant l'implémentation réelle par défaut) et peut être restaurée
+- [ ] `spyOn` ne fonctionne qu'avec des classes
+- [ ] `jest.fn()` appelle toujours l'implémentation réelle
+> `jest.fn()` crée une fonction factice à partir de rien. `jest.spyOn` remplace une méthode d'un objet réel tout en enregistrant les appels ; `mockRestore()` remet l'original. On peut ensuite surcharger avec `.mockResolvedValue()`.
+[doc]: Jest — jest.spyOn (EN) | https://jestjs.io/docs/jest-object#jestspyonobject-methodname
+
+### Comment obtenir dans un test une instance d'un provider `Scope.REQUEST` ?
+- [ ] `moduleRef.get(Service)`
+- [x] `await moduleRef.resolve(Service)`
+- [ ] `new Service()`
+- [ ] Ce n'est pas testable
+> `get()` ne fonctionne que pour les providers statiques (singleton). Pour un provider request-scoped ou transient, `resolve()` crée une instance dans un sous-arbre d'injection ; deux appels renvoient deux instances différentes, sauf si l'on passe le même `contextId`.
+[doc]: NestJS — Testing request-scoped instances (EN) | https://docs.nestjs.com/fundamentals/testing#testing-request-scoped-instances
+
+### Quelle est la différence entre `mockClear()`, `mockReset()` et `mockRestore()` ?
+- [ ] Ce sont des alias
+- [x] `clear` efface l'historique des appels ; `reset` efface aussi l'implémentation ; `restore` remet en plus la méthode originale d'un `spyOn`
+- [ ] `restore` efface l'historique, `clear` remet l'original
+- [ ] `reset` n'existe que pour les timers
+> Les options `clearMocks`, `resetMocks` ou `restoreMocks` dans la config Jest les appliquent automatiquement avant chaque test. Elles évitent que l'état d'un mock déborde sur le test suivant.
+[doc]: Jest — Mock functions API (EN) | https://jestjs.io/docs/mock-function-api#mockfnmockclear
+
+### Des tests d'intégration partagent une même base PostgreSQL et échouent aléatoirement. Quelle mesure est la plus simple pour commencer ?
+- [ ] Ajouter des `setTimeout` entre les tests
+- [x] Exécuter les fichiers en série (`jest --runInBand`) ou donner une base / un schéma par worker
+- [ ] Désactiver les transactions
+- [ ] Relancer la suite jusqu'à ce qu'elle passe
+> Par défaut, Jest exécute les fichiers en parallèle dans plusieurs workers : deux fichiers qui vident les mêmes tables se marchent dessus. On sérialise, ou on isole par worker grâce à `JEST_WORKER_ID`.
+[doc]: Jest — CLI --runInBand (EN) | https://jestjs.io/docs/cli#--runinband
+
+### Que décrit le schéma « Arrange / Act / Assert » ?
+- [ ] Les trois niveaux de la pyramide de tests
+- [x] La structure d'un test : préparer le contexte, exécuter l'action testée, vérifier le résultat
+- [ ] Les trois hooks `beforeAll`, `it`, `afterAll`
+- [ ] Les étapes d'une revue de code
+> Un test lisible a une seule action et des assertions qui s'y rapportent. Si la partie « Arrange » devient énorme, c'est souvent un signal que l'unité testée a trop de dépendances.
+[doc]: Martin Fowler — Given When Then (EN) | https://martinfowler.com/bliki/GivenWhenThen.html
+
+### Qu'apporte un test de contrat (ex. Pact) entre un front et une API ?
+- [ ] Il remplace les tests unitaires
+- [x] Il vérifie que le fournisseur respecte les attentes exprimées par le consommateur, sans déployer les deux ensemble
+- [ ] Il mesure les performances de l'API
+- [ ] Il génère la documentation OpenAPI
+> Le consommateur enregistre les interactions dont il dépend ; le fournisseur les rejoue dans sa CI. On détecte un changement cassant avant le déploiement, sans environnement e2e partagé et fragile.
+[doc]: Pact — Introduction (EN) | https://docs.pact.io/
+
+### Quelle répartition de tests le « testing trophy » de Kent C. Dodds met-il en avant pour une application web ?
+- [ ] Une majorité de tests e2e
+- [x] Une majorité de tests d'intégration, appuyés par l'analyse statique, des tests unitaires et quelques tests e2e
+- [ ] Uniquement des tests unitaires
+- [ ] Autant de tests de chaque type
+> L'idée : les tests d'intégration offrent le meilleur rapport confiance / coût. L'analyse statique (TypeScript, ESLint) forme la base du trophée et attrape une classe entière d'erreurs gratuitement.
+[doc]: Kent C. Dodds — The Testing Trophy (EN) | https://kentcdodds.com/blog/the-testing-trophy-and-testing-classifications
+
+### Un test passe même quand on supprime la ligne de code métier qu'il est censé couvrir. Quel outil détecte ce genre de test faible ?
+- [ ] La couverture de code (`--coverage`)
+- [x] Le *mutation testing* (ex. Stryker)
+- [ ] Le linter
+- [ ] Les snapshots
+> La couverture dit seulement qu'une ligne a été **exécutée**. Le mutation testing modifie le code (inverse une condition, supprime un appel) et vérifie qu'au moins un test échoue : un « mutant survivant » révèle une assertion manquante.
+[doc]: Stryker — Introduction (EN) | https://stryker-mutator.io/docs/

@@ -249,3 +249,106 @@ declare const p: P;
 - [ ] `T` est accessible à l'exécution via `typeof T`
 > Comme tous les types, les génériques disparaissent au runtime : impossible de faire `new T()` ou de lire `T`. Pour instancier, il faut passer le constructeur en paramètre : `function create<T>(ctor: new () => T): T`.
 [doc]: Handbook — Generics | https://www.typescriptlang.org/fr/docs/handbook/2/generics.html
+
+### Quel est le type de `b.contenu` ?
+```ts
+interface Boite<T = string> { contenu: T }
+const b: Boite = { contenu: 'livre' };
+```
+- [ ] `unknown`
+- [x] `string`
+- [ ] `any`
+- [ ] Erreur : il manque l'argument de type
+> Un paramètre de type peut avoir une **valeur par défaut**, utilisée quand on ne précise rien et qu'il n'y a rien à inférer. Exemple réel : `Type<T = any>` dans NestJS, ou `Promise<T>` dans certaines signatures de librairies.
+[doc]: Handbook — Generic parameter defaults | https://www.typescriptlang.org/fr/docs/handbook/2/generics.html
+
+### Ce code compile-t-il ?
+```ts
+function paire<T>(a: T, b: T): [T, T] {
+  return [a, b];
+}
+paire(1, 'a');
+```
+- [ ] Oui, `T` est inféré `string | number`
+- [x] Non : `T` est inféré `number` et `'a'` n'est pas assignable à `number`
+- [ ] Oui, `T` est inféré `unknown`
+- [ ] Non : un générique ne peut apparaître qu'une fois dans les paramètres
+> Face à plusieurs candidats, TS ne fabrique pas d'union automatiquement : il retient un candidat et vérifie les autres. Si l'union est voulue, on l'explicite : `paire<string | number>(1, 'a')`.
+[doc]: Handbook — Generics | https://www.typescriptlang.org/fr/docs/handbook/2/generics.html
+
+### Pourquoi cette classe ne compile-t-elle pas ?
+```ts
+class Pile<T> {
+  static vide: T[] = [];
+}
+```
+- [ ] Une classe générique ne peut pas avoir de membres statiques
+- [x] Un membre statique ne peut pas référencer le paramètre de type de la classe
+- [ ] Il faut initialiser `vide` dans le constructeur
+- [ ] Il faut écrire `static vide: Array<T>`
+> Les membres statiques appartiennent à la **classe** (unique), pas à une instance `Pile<number>` ou `Pile<string>`. Le paramètre `T` n'a donc pas de sens à ce niveau.
+[doc]: Handbook — Generic classes | https://www.typescriptlang.org/fr/docs/handbook/2/generics.html
+
+### Que change `NoInfer` (TS 5.4) dans cette signature ?
+```ts
+function creerMachine<S extends string>(etats: S[], initial: NoInfer<S>) {}
+creerMachine(['idle', 'loading'], 'done');
+```
+- [ ] Rien, c'est un alias de `S`
+- [x] `S` est inféré uniquement depuis `etats`, donc `'done'` est refusé
+- [ ] `initial` devient de type `unknown`
+- [ ] Il empêche d'inférer `S` partout, il faut l'expliciter
+> Sans `NoInfer`, TS utiliserait aussi `initial` comme source d'inférence et `S` deviendrait `'idle' | 'loading' | 'done'` — sans erreur. `NoInfer<T>` exclut une position de l'inférence pour qu'elle serve seulement de vérification.
+[doc]: TypeScript 5.4 — NoInfer | https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-4.html
+
+### Quel est le type de `m` ?
+```ts
+const m = new Map();
+```
+- [ ] `Map<unknown, unknown>`
+- [x] `Map<any, any>`
+- [ ] `Map<never, never>`
+- [ ] `Map<string, any>`
+> Sans argument ni type explicite, il n'y a rien à inférer et `Map` retombe sur `any` : on perd tout contrôle. Écrivez `new Map<string, number>()` (même logique pour `new Set<string>()` ou `useState<User | null>(null)`).
+[doc]: Handbook — Generics | https://www.typescriptlang.org/fr/docs/handbook/2/generics.html
+
+### Pourquoi cette fonction ne compile-t-elle pas ?
+```ts
+function defaut<T extends string>(): T {
+  return 'a';
+}
+```
+- [ ] `T` doit avoir une valeur par défaut
+- [x] `T` pourrait être un sous-type plus étroit, comme `'b'`, auquel `'a'` n'est pas assignable
+- [ ] Une fonction générique doit avoir au moins un paramètre
+- [ ] `'a'` n'est pas une `string`
+> La contrainte `extends string` donne une borne, pas le type exact : l'appelant peut choisir `defaut<'b'>()`. Le corps doit fonctionner pour **tout** `T` possible. Si la fonction renvoie toujours une `string`, le générique est inutile.
+[doc]: Handbook — Generic constraints | https://www.typescriptlang.org/fr/docs/handbook/2/generics.html
+
+### Quel appel ne compile pas ?
+```ts
+function plusLong<T extends { length: number }>(a: T, b: T): T {
+  return a.length >= b.length ? a : b;
+}
+```
+- [ ] `plusLong([1, 2], [1, 2, 3])`
+- [ ] `plusLong('alice', 'bob')`
+- [x] `plusLong(10, 100)`
+- [ ] Ils compilent tous
+> La contrainte exige une propriété `length` : tableaux et chaînes l'ont, pas `number`. Et le type de retour reste précis : `number[]` dans le premier cas, `string` dans le second.
+[doc]: Handbook — Generic constraints | https://www.typescriptlang.org/fr/docs/handbook/2/generics.html
+
+### Quel est le type de `emails` ?
+```ts
+function extraire<T, K extends keyof T>(items: T[], cle: K): T[K][] {
+  return items.map((item) => item[cle]);
+}
+declare const users: { id: number; email: string }[];
+const emails = extraire(users, 'email');
+```
+- [ ] `unknown[]`
+- [ ] `(string | number)[]`
+- [x] `string[]`
+- [ ] `T[K][]`
+> `T` est inféré depuis `users`, `K` depuis `'email'` (le littéral, grâce à la contrainte `keyof T`), puis `T[K]` se résout en `string`. Un appel avec `'nom'` serait refusé à la compilation.
+[doc]: Handbook — keyof dans les génériques | https://www.typescriptlang.org/fr/docs/handbook/2/generics.html

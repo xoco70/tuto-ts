@@ -227,3 +227,67 @@ Utile pour le *strategy pattern* dynamique ; à éviter comme *service locator* 
 - [ ] Ils sont request-scoped par défaut
 > Les controllers ne sont pas des providers : on ne les injecte pas ailleurs. Ils sont singletons par défaut (sauf si une dépendance est request-scoped).
 [doc]: NestJS — Controllers (EN) | https://docs.nestjs.com/controllers
+
+### Quel provider est le plus adapté pour injecter un objet de configuration constant ou un faux service dans un test ?
+- [ ] `useClass`
+- [x] `useValue`
+- [ ] `useFactory` sans `inject`
+- [ ] `useExisting`
+> `{ provide: 'APP_OPTIONS', useValue: { region: 'eu' } }` enregistre une valeur déjà construite. C'est aussi le moyen le plus simple de remplacer un service par un double de test.
+[doc]: NestJS — Value providers (EN) | https://docs.nestjs.com/fundamentals/custom-providers#value-providers-usevalue
+
+### Comment injecter un provider enregistré avec un token chaîne ou `Symbol` ?
+- [ ] `constructor(private client: 'REDIS_CLIENT')`
+- [x] `constructor(@Inject(REDIS_CLIENT) private client: Redis)`
+- [ ] `constructor(@Injectable(REDIS_CLIENT) private client: Redis)`
+- [ ] Il suffit de typer le paramètre avec `Redis`
+> Sans classe comme token, les métadonnées de type ne suffisent pas (et un type comme `Redis` peut être une interface, effacée à la compilation). `@Inject(token)` indique explicitement la clé à résoudre.
+[doc]: NestJS — Non-class-based provider tokens (EN) | https://docs.nestjs.com/fundamentals/custom-providers#non-class-based-provider-tokens
+
+### Que fait `@Optional()` sur un paramètre du constructeur ?
+- [ ] Il rend le provider facultatif dans `providers`
+- [x] Il injecte `undefined` au lieu de lever une erreur si la dépendance n'est pas résolue
+- [ ] Il crée le provider de façon paresseuse
+- [ ] Il marque la dépendance comme request-scoped
+> Utile pour une dépendance réellement facultative (ex. un objet d'options avec valeurs par défaut). À utiliser avec parcimonie : un oubli d'import dans un module devient alors silencieux.
+[doc]: NestJS — Optional providers (EN) | https://docs.nestjs.com/providers#optional-providers
+
+### `UsersService` est déclaré dans le tableau `providers` de `UsersModule` **et** de `OrdersModule`. Que se passe-t-il ?
+- [ ] Nest lève une erreur de doublon
+- [x] Deux instances distinctes coexistent, chacune avec son propre état
+- [ ] Nest réutilise automatiquement la même instance
+- [ ] Le second module écrase le premier
+> Un singleton l'est **par module qui le déclare**. Redéclarer un service ailleurs crée une seconde instance (et un second cache, une seconde connexion…). La bonne pratique : le déclarer et l'exporter dans un seul module, puis importer ce module.
+[doc]: NestJS — Shared modules (EN) | https://docs.nestjs.com/modules#shared-modules
+
+### Que permet le scope `Scope.TRANSIENT` ?
+- [ ] Une instance par requête HTTP
+- [x] Une nouvelle instance dédiée à chaque consommateur qui l'injecte
+- [ ] Une instance unique partagée par toute l'application
+- [ ] Une instance détruite après chaque appel de méthode
+> Un provider transient n'est pas partagé : chaque classe qui l'injecte reçoit sa propre instance. Cas typique : un logger qui mémorise le contexte (`setContext('OrdersService')`) propre à son consommateur.
+[doc]: NestJS — Injection scopes (EN) | https://docs.nestjs.com/fundamentals/injection-scopes
+
+### Quelle est la différence entre `TypeOrmModule.forRoot()` et `TypeOrmModule.forFeature([User])` ?
+- [ ] `forFeature` crée une seconde connexion à la base
+- [x] `forRoot` configure la connexion une fois ; `forFeature` enregistre les repositories des entités dans un module donné
+- [ ] `forRoot` est réservé aux tests
+- [ ] Il n'y a pas de différence
+> Convention des modules dynamiques : `forRoot` (configuration globale, une fois, dans `AppModule`) et `forFeature` (ce dont un module métier a besoin). Les modules de la communauté suivent le même schéma (`BullModule.registerQueue`, `JwtModule.register`…).
+[doc]: NestJS — Database / repository pattern (EN) | https://docs.nestjs.com/techniques/database#repository-pattern
+
+### Comment choisir l'implémentation d'un port `MAILER` selon l'environnement ?
+- [ ] Avec un `if` dans chaque service qui envoie des emails
+- [x] `{ provide: MAILER, useClass: process.env.NODE_ENV === 'test' ? FakeMailer : SmtpMailer }`
+- [ ] Avec `@Global()` sur les deux classes
+- [ ] En déclarant les deux classes dans `providers`
+> Le choix de l'implémentation est centralisé dans la configuration du module ; le code métier dépend seulement du token. Pour une logique plus riche (lecture de `ConfigService`), on passe à `useFactory` avec `inject`.
+[doc]: NestJS — Class providers (EN) | https://docs.nestjs.com/fundamentals/custom-providers#class-providers-useclass
+
+### Un module peut-il réexporter un module qu'il importe ?
+- [ ] Non, seuls les providers peuvent être exportés
+- [x] Oui : `exports: [CommonModule]` rend ses providers exportés disponibles aux importateurs
+- [ ] Oui, mais seulement s'il est `@Global()`
+- [ ] Non, cela crée une dépendance circulaire
+> Le réexport permet de créer un module « façade » (ex. `CoreModule` qui réexporte `ConfigModule`, `LoggerModule`…). À garder simple : trop de réexports rendent les dépendances difficiles à suivre.
+[doc]: NestJS — Module re-exporting (EN) | https://docs.nestjs.com/modules#module-re-exporting

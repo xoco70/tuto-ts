@@ -248,3 +248,67 @@ export function Auth(...roles: Role[]) {
 - [ ] Valider le body de la requête avec class-validator
 > Les interceptors gèrent la logique transverse autour de l'appel (cache, logs, timeout, mapping de réponse ou d'erreurs). La validation des arguments est le rôle des **pipes**.
 [doc]: NestJS — Interceptors (EN) | https://docs.nestjs.com/interceptors
+
+### Que renvoie Nest quand un service lève `new NotFoundException('Commande introuvable')` ?
+- [ ] Une 500 avec le message
+- [x] Une 404 avec un corps `{ statusCode: 404, message: 'Commande introuvable', error: 'Not Found' }`
+- [ ] Une 404 sans corps
+- [ ] Une 200 avec `{ error: … }`
+> Les exceptions HTTP intégrées (`BadRequestException`, `ForbiddenException`, `ConflictException`…) sont traitées par le filtre global par défaut. Dans une architecture propre, le domaine lève plutôt ses propres erreurs, traduites en HTTP par un filtre.
+[doc]: NestJS — Built-in HTTP exceptions (EN) | https://docs.nestjs.com/exception-filters#built-in-http-exceptions
+
+### Un handler injecte `@Res() res: Response` pour ajouter un cookie. Pourquoi la réponse ne part-elle plus ?
+- [ ] Les cookies sont interdits dans Nest
+- [x] Avec `@Res()`, Nest considère que vous gérez la réponse : il faut appeler `res.send()`, ou utiliser `@Res({ passthrough: true })`
+- [ ] Il faut déclarer le handler `async`
+- [ ] Un interceptor bloque la réponse
+> Injecter l'objet réponse natif désactive la gestion standard (sérialisation, interceptors de mapping…). `passthrough: true` permet de manipuler `res` tout en laissant Nest envoyer la valeur retournée.
+[doc]: NestJS — Library-specific approach (EN) | https://docs.nestjs.com/controllers#library-specific-approach
+
+### Comment faire renvoyer `204 No Content` à un `DELETE` ?
+- [ ] `return null;`
+- [x] Décorer le handler avec `@HttpCode(204)`
+- [ ] `throw new HttpException('', 204)`
+- [ ] C'est le comportement par défaut d'un `@Delete()`
+> Par défaut, Nest renvoie 200 (201 pour `@Post()`). `@HttpCode()` change le statut ; pour un statut dynamique, on passe par `@Res({ passthrough: true })` ou une exception.
+[doc]: NestJS — Status code (EN) | https://docs.nestjs.com/controllers#status-code
+
+### Comment appliquer un middleware de journalisation aux routes `orders` ?
+- [ ] `@UseMiddleware(LoggerMiddleware)` sur le controller
+- [x] Implémenter `NestModule` et appeler `consumer.apply(LoggerMiddleware).forRoutes('orders')` dans `configure()`
+- [ ] L'ajouter dans `providers`
+- [ ] `app.useGlobalInterceptors(LoggerMiddleware)`
+> Les middlewares ne s'appliquent pas par décorateur mais via le `MiddlewareConsumer` du module, avec `forRoutes` et `exclude`. Ils s'exécutent avant les guards et n'ont pas accès à l'`ExecutionContext`.
+[doc]: NestJS — Applying middleware (EN) | https://docs.nestjs.com/middleware#applying-middleware
+
+### Trois interceptors sont liés : un global, un sur le controller et un sur la route. Dans quel ordre traitent-ils la réponse (après `next.handle()`) ?
+- [ ] Global → controller → route
+- [x] Route → controller → global
+- [ ] Dans un ordre non déterministe
+- [ ] Seul l'interceptor de route traite la réponse
+> À l'entrée : global → controller → route. Les interceptors enveloppent le handler comme des oignons, donc la réponse remonte dans l'ordre **inverse**. C'est important quand l'un enveloppe la réponse et qu'un autre la mesure.
+[doc]: NestJS — Request lifecycle (EN) | https://docs.nestjs.com/faq/request-lifecycle
+
+### Comment lire `?page=` avec `1` comme valeur par défaut et un entier garanti ?
+- [ ] `@Query('page') page = 1`
+- [x] `@Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number`
+- [ ] `@Query('page', ParseIntPipe, new DefaultValuePipe(1)) page: number`
+- [ ] `@Query({ page: 1 }) page: number`
+> Les pipes s'appliquent dans l'ordre : `DefaultValuePipe` remplace `undefined` par `1`, puis `ParseIntPipe` convertit et valide. Dans l'ordre inverse, `ParseIntPipe` rejetterait l'absence de valeur.
+[doc]: NestJS — Providing defaults (EN) | https://docs.nestjs.com/pipes#providing-defaults
+
+### Que capture un filtre déclaré avec `@Catch()` sans argument ?
+- [ ] Uniquement les `HttpException`
+- [x] Toutes les exceptions, quel que soit leur type
+- [ ] Aucune, il faut préciser une classe
+- [ ] Uniquement les erreurs non gérées de Node
+> Un filtre « catch-all » sert à normaliser toutes les erreurs (format RFC 9457, log avec correlation id, masquage des détails internes). Utilisez `HttpAdapterHost` pour rester indépendant d'Express ou Fastify.
+[doc]: NestJS — Catch everything (EN) | https://docs.nestjs.com/exception-filters#catch-everything
+
+### Un guard lève `new UnauthorizedException()` au lieu de retourner `false`. Quelle différence côté client ?
+- [ ] Aucune
+- [x] Le client reçoit 401 au lieu du 403 produit par un `false`
+- [ ] L'exception n'est pas gérée et provoque une 500
+- [ ] Le handler est quand même exécuté
+> Retourner `false` déclenche une `ForbiddenException` (403). Pour une absence d'authentification, lever explicitement `UnauthorizedException` (401) est plus juste — c'est ce que fait `AuthGuard('jwt')` de Passport.
+[doc]: NestJS — Guards (EN) | https://docs.nestjs.com/guards

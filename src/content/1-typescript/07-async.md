@@ -246,3 +246,92 @@ process.nextTick(() => console.log('nextTick'));
 - [ ] Une Promise peut être résolue plusieurs fois avec des valeurs différentes
 > L'*executor* s'exécute immédiatement, de façon synchrone. En revanche, les callbacks `then/catch` sont **toujours** asynchrones (microtâche), même sur une promesse déjà résolue. Les appels suivants à `resolve`/`reject` sont ignorés.
 [doc]: MDN — Promise | https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Global_Objects/Promise
+
+### Quel est l'ordre d'affichage ?
+```ts
+async function f() {
+  console.log('A');
+  await null;
+  console.log('B');
+}
+f();
+console.log('C');
+```
+- [ ] A, B, C
+- [x] A, C, B
+- [ ] C, A, B
+- [ ] A, C (B n'est jamais affiché)
+> Le corps d'une fonction `async` s'exécute **de façon synchrone** jusqu'au premier `await`. La suite est planifiée en microtâche, exécutée une fois la pile courante vidée — donc après `console.log('C')`.
+[doc]: MDN — async function | https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Statements/async_function
+
+### Le message « attrapé » est-il affiché ?
+```ts
+async function charger() {
+  throw new Error('boom');
+}
+try {
+  charger();
+} catch {
+  console.log('attrapé');
+}
+```
+- [ ] Oui, l'erreur est levée immédiatement
+- [x] Non : `charger()` retourne une Promise rejetée, le `try/catch` synchrone ne la voit pas
+- [ ] Non, car `catch` sans paramètre est invalide
+- [ ] Oui, mais seulement en mode strict
+> Dans une fonction `async`, un `throw` devient un **rejet** de la Promise retournée. Sans `await charger()` (dans un contexte async) ou `.catch()`, on obtient une *unhandled rejection* — qui fait planter Node ≥ 15.
+[doc]: MDN — async function | https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Statements/async_function
+
+### À quoi sert `Promise.withResolvers()` (ES2024) ?
+- [ ] À résoudre plusieurs Promises en parallèle
+- [x] À créer une Promise en récupérant `resolve` et `reject` pour les appeler depuis l'extérieur
+- [ ] À annuler une Promise en cours
+- [ ] À convertir une fonction callback en Promise
+> `const { promise, resolve, reject } = Promise.withResolvers<T>()` remplace le motif où l'on « sortait » `resolve` du constructeur `new Promise`. Utile pour adapter une API à base d'événements (WebSocket, worker…).
+[doc]: MDN — Promise.withResolvers | https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Global_Objects/Promise/withResolvers
+
+### Comment consommer un flux asynchrone (stream Node, async generator, pagination) élément par élément ?
+- [ ] `for (const x of flux)`
+- [x] `for await (const x of flux)`
+- [ ] `flux.forEach(async (x) => …)`
+- [ ] `await Promise.all(flux)`
+> `for await...of` itère sur un **itérable asynchrone** en attendant chaque valeur. Les streams Node (`Readable`) sont itérables de cette façon, ce qui permet de traiter un gros fichier sans tout charger en mémoire.
+[doc]: MDN — for await...of | https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Statements/for-await...of
+
+### Où le `await` de haut niveau (*top-level await*) est-il autorisé ?
+- [ ] Partout depuis ES2017
+- [x] Uniquement dans les modules ES (pas dans un fichier CommonJS)
+- [ ] Uniquement dans les fichiers `.mts`
+- [ ] Nulle part, il faut toujours une fonction `async`
+> Le top-level await n'existe que dans les **modules ES** : il suspend l'évaluation du module (et de ceux qui l'importent). Côté TS, il faut `module` en `es2022`, `esnext`, `nodenext`… et un fichier traité comme ESM.
+[doc]: MDN — await | https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Operators/await
+
+### Quel est le type de `p` ?
+```ts
+const p = Promise.resolve(1).then((x) => Promise.resolve(x + 1));
+```
+- [ ] `Promise<Promise<number>>`
+- [x] `Promise<number>`
+- [ ] `number`
+- [ ] `Promise<unknown>`
+> Une Promise retournée dans un `.then` est **aplatie** : on ne peut pas obtenir une Promise de Promise. C'est ce qui permet de chaîner des appels asynchrones. L'utilitaire `Awaited<T>` reproduit ce déballage récursif au niveau des types.
+[doc]: MDN — Utiliser les promesses (chaînage) | https://developer.mozilla.org/fr/docs/Web/JavaScript/Guide/Using_promises
+
+### Quelle valeur la Promise produit-elle ?
+```ts
+const v = await Promise.resolve(1).finally(() => 2);
+```
+- [x] `1`
+- [ ] `2`
+- [ ] `undefined`
+- [ ] `[1, 2]`
+> `finally` sert au nettoyage (fermer une connexion, cacher un loader) et **ne modifie pas** la valeur transmise. Exception : si le callback lève une erreur ou retourne une Promise rejetée, c'est ce rejet qui l'emporte.
+[doc]: MDN — Promise.prototype.finally | https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Global_Objects/Promise/finally
+
+### Pourquoi ajouter de l'aléa (*jitter*) à un délai de retry exponentiel ?
+- [ ] Pour rendre les tests non déterministes
+- [x] Pour éviter que tous les clients en échec réessaient au même instant et saturent à nouveau le service
+- [ ] Pour contourner le rate limiting
+- [ ] Pour réduire le nombre total de tentatives
+> Si 1 000 clients échouent ensemble avec un backoff fixe (1 s, 2 s, 4 s…), ils reviennent ensemble — effet « troupeau ». Un délai aléatoire (`random(0, base * 2 ** tentative)`) étale la charge et laisse le service récupérer.
+[doc]: AWS — Exponential backoff and jitter (EN) | https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/

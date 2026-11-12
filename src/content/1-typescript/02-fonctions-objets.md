@@ -273,3 +273,101 @@ interface Factory { new (nom: string): Service }
 - [ ] On peut avoir plusieurs paramètres rest
 > Un paramètre non fourni vaut `undefined` (pas `null`). Il ne peut y avoir qu'un seul paramètre rest, en dernière position.
 [doc]: Handbook — Paramètres rest | https://www.typescriptlang.org/fr/docs/handbook/2/functions.html
+
+### Ce code compile-t-il ?
+```ts
+function formater(x: string): string;
+function formater(x: number): string;
+function formater(x: string | number): string {
+  return String(x);
+}
+declare const v: string | number;
+formater(v);
+```
+- [ ] Oui, la signature d'implémentation accepte `string | number`
+- [x] Non : aucune surcharge publique n'accepte `string | number`
+- [ ] Oui, TS choisit la première surcharge
+- [ ] Non, une surcharge doit avoir un corps
+> La signature d'**implémentation** n'est pas visible de l'extérieur : seules les surcharges le sont, et TS en cherche une seule qui accepte l'argument. Ici, une simple signature `(x: string | number): string` serait plus simple et plus utile — préférez une union aux surcharges quand c'est possible.
+[doc]: Handbook — Surcharges de fonctions | https://www.typescriptlang.org/fr/docs/handbook/2/functions.html
+
+### Quelle est la différence entre `{ a?: string }` et `{ a: string | undefined }` ?
+- [ ] Aucune
+- [x] Avec la seconde, la propriété `a` doit être présente (même si elle vaut `undefined`)
+- [ ] La première interdit `undefined`
+- [ ] La seconde est refusée en mode `strict`
+> `{}` est assignable à `{ a?: string }` mais pas à `{ a: string | undefined }`, où la clé est obligatoire. L'option `exactOptionalPropertyTypes` va plus loin : elle interdit d'écrire explicitement `a: undefined` sur une propriété `a?: string`.
+[doc]: tsconfig — exactOptionalPropertyTypes | https://www.typescriptlang.org/fr/tsconfig#exactOptionalPropertyTypes
+
+### Ce code compile-t-il ?
+```ts
+interface Commande {
+  readonly client: { nom: string };
+}
+declare const c: Commande;
+c.client.nom = 'Alice';
+```
+- [x] Oui : `readonly` est superficiel, il protège seulement la propriété `client`
+- [ ] Non : tout l'objet est en lecture seule
+- [ ] Non, mais uniquement en mode `strict`
+- [ ] Oui, mais lève une erreur à l'exécution
+> `readonly` empêche `c.client = …` mais pas la mutation des objets imbriqués. Pour une immuabilité profonde, il faut un type récursif (`DeepReadonly<T>`) — et rien de tout cela n'existe à l'exécution.
+[doc]: Handbook — Propriétés readonly | https://www.typescriptlang.org/fr/docs/handbook/2/objects.html
+
+### Pourquoi cet appel ne compile-t-il pas ?
+```ts
+const args = [8, 5];
+const angle = Math.atan2(...args);
+```
+- [ ] `Math.atan2` n'accepte pas de spread
+- [x] `args` est inféré `number[]` : TS ne sait pas qu'il contient exactement deux éléments
+- [ ] Il faut écrire `Math.atan2.apply(args)`
+- [ ] Il compile sans erreur
+> Un spread doit cibler un paramètre rest ou avoir un **type tuple**. `number[]` peut avoir 0 ou 50 éléments. Avec `const args = [8, 5] as const`, le type devient `readonly [8, 5]` et l'appel compile.
+[doc]: Handbook — Rest arguments | https://www.typescriptlang.org/fr/docs/handbook/2/functions.html
+
+### Pourquoi cette interface est-elle refusée ?
+```ts
+interface Dictionnaire {
+  [cle: string]: number;
+  nom: string;
+}
+```
+- [ ] On ne peut pas combiner signature d'index et propriétés nommées
+- [x] Toutes les propriétés nommées doivent respecter le type de la signature d'index (`number`)
+- [ ] Il manque `readonly` devant la signature d'index
+- [ ] La clé d'une signature d'index doit être `number`
+> Avec `[cle: string]: number`, **toute** clé chaîne doit renvoyer un `number`, y compris `nom`. Solution : élargir la signature (`number | string`) ou séparer les données (`{ nom: string; valeurs: Record<string, number> }`).
+[doc]: Handbook — Index signatures | https://www.typescriptlang.org/fr/docs/handbook/2/objects.html
+
+### Que fait réellement ce paramètre ?
+```ts
+function afficher({ titre: string }) {
+  console.log(string);
+}
+```
+- [ ] Il déstructure `titre` et l'annote en `string`
+- [x] Il déstructure `titre` et le renomme en une variable appelée `string`
+- [ ] Il déclare un paramètre optionnel
+- [ ] C'est une erreur de syntaxe
+> Dans un motif de déstructuration, `{ a: b }` **renomme** `a` en `b`. L'annotation de type se place après le motif : `function afficher({ titre }: { titre: string })`. Avec `noImplicitAny`, le code d'origine est signalé car `string` est implicitement `any`.
+[doc]: Handbook — Déstructuration de paramètres | https://www.typescriptlang.org/fr/docs/handbook/2/functions.html
+
+### Ce code compile-t-il ?
+```ts
+const scores: Record<'alice' | 'bob', number> = { alice: 12 };
+```
+- [ ] Oui, les clés de `Record` sont optionnelles
+- [x] Non : la clé `bob` est manquante
+- [ ] Oui, mais `scores.bob` vaut `0`
+- [ ] Non : `Record` n'accepte que `string` comme clé
+> `Record<K, V>` avec une union de littéraux exige **toutes** les clés. Pour des clés facultatives : `Partial<Record<'alice' | 'bob', number>>`. Avec `Record<string, number>`, en revanche, aucune clé n'est imposée.
+[doc]: Handbook — Record | https://www.typescriptlang.org/docs/handbook/utility-types.html#recordkeys-type
+
+### Pourquoi peut-on passer `(x) => console.log(x)` à `forEach`, dont le callback reçoit `(value, index, array)` ?
+- [ ] Parce que `forEach` est typé avec `any`
+- [x] Parce qu'une fonction qui ignore des paramètres est assignable à un type fonction qui en déclare davantage
+- [ ] Parce que les paramètres manquants sont optionnels par défaut
+- [ ] Ce n'est autorisé qu'avec `strict: false`
+> En JavaScript, ignorer des arguments supplémentaires est sans danger : TS accepte donc une fonction avec **moins** de paramètres. L'inverse (exiger plus de paramètres que l'appelant n'en fournit) est refusé. C'est pourquoi il ne faut pas déclarer un paramètre optionnel dans un type de callback « au cas où ».
+[doc]: Handbook — Paramètres optionnels dans les callbacks | https://www.typescriptlang.org/fr/docs/handbook/2/functions.html

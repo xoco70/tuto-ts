@@ -240,3 +240,74 @@ const AuthContext = createContext<AuthValue | null>(null);
 - [x] Les génériques de composant sont inférés depuis les props passées
 > TypeScript ne vérifie rien à l'exécution : des données d'API mal formées passeront dans les props. Valider à la frontière (Zod) reste nécessaire.
 [doc]: React — Utiliser TypeScript | https://fr.react.dev/learn/typescript
+
+### Comment typer un état qui contient un utilisateur chargé plus tard ?
+- [ ] `useState(null)`
+- [x] `useState<User | null>(null)`
+- [ ] `useState<User>(null!)`
+- [ ] `useState({} as User)`
+> Sans argument de type, `useState(null)` infère `null` et `setUser(user)` est refusé. `null!` ou `{} as User` mentent au compilateur : le premier rendu accéderait à `user.nom` sur `null` ou sur un objet vide.
+[doc]: React — Typer useState | https://fr.react.dev/learn/typescript#typing-usestate
+
+### Avec les types de React 19, quel est le type de `ref` ?
+```tsx
+const ref = useRef<HTMLInputElement>(null);
+```
+- [ ] `MutableRefObject<HTMLInputElement>`
+- [x] `RefObject<HTMLInputElement | null>`
+- [ ] `HTMLInputElement | null`
+- [ ] `Ref<unknown>`
+> Depuis React 19, `useRef` exige un argument et `ref.current` est toujours modifiable ; le `null` initial apparaît dans le type. On écrit donc `ref.current?.focus()` dans un handler ou un effet.
+[doc]: React 19 — Guide de migration, useRef (EN) | https://react.dev/blog/2024/04/25/react-19-upgrade-guide#useref-requires-argument
+
+### Quel type d'action donne le meilleur typage à un `useReducer` ?
+- [ ] `{ type: string; payload?: any }`
+- [x] Une union discriminée : `{ type: 'ajouter'; produit: Produit } | { type: 'vider' }`
+- [ ] `any`
+- [ ] Une enum de chaînes sans payload
+> Dans `switch (action.type)`, TS affine `action` : `action.produit` n'est accessible que dans le cas `'ajouter'`. `dispatch({ type: 'ajouter' })` sans produit est refusé, et une vérification d'exhaustivité attrape les cas oubliés.
+[doc]: React — Typer useReducer | https://fr.react.dev/learn/typescript#typing-usereducer
+
+### Comment typer le handler `onSubmit` d'un formulaire ?
+- [ ] `(e: SubmitEvent) => void`
+- [x] `(e: React.FormEvent<HTMLFormElement>) => void`
+- [ ] `(e: React.ChangeEvent<HTMLFormElement>) => void`
+- [ ] `(e: Event) => void`
+> React passe ses propres événements synthétiques, typés `React.XxxEvent<Element>`. Astuce : écrire le handler en ligne (`onSubmit={(e) => …}`) et survoler `e` dans l'éditeur donne le type exact.
+[doc]: React — Typer les événements DOM | https://fr.react.dev/learn/typescript#typing-dom-events
+
+### Quel type utiliser pour une prop `style` transmise à un élément DOM ?
+- [ ] `object`
+- [ ] `Record<string, string>`
+- [x] `React.CSSProperties`
+- [ ] `string`
+> `React.CSSProperties` liste les propriétés CSS en camelCase avec leurs types de valeurs. Une faute de frappe comme `{ colr: 'red' }` est signalée.
+[doc]: React — Typer les props de style | https://fr.react.dev/learn/typescript#typing-style-props
+
+### Comment typer une prop « render prop » d'un composant `Liste<T>` ?
+- [ ] `renderItem: Function`
+- [x] `renderItem: (item: T) => React.ReactNode`
+- [ ] `renderItem: React.FC<T>`
+- [ ] `renderItem: JSX.Element`
+> Le type `T` est inféré depuis `items`, puis transmis au callback : `item` est correctement typé sans annotation au moment de l'utilisation. `Function` est à proscrire (aucun contrôle des arguments).
+[doc]: React TypeScript Cheatsheet — Composants génériques (EN) | https://react-typescript-cheatsheet.netlify.app/docs/advanced/patterns_by_usecase/#generic-components
+
+### Quelle différence entre `React.ReactNode` et `React.ReactElement` ?
+- [ ] Aucune
+- [x] `ReactNode` accepte tout ce qui est affichable (texte, nombre, `null`, tableaux, éléments) ; `ReactElement` n'accepte qu'un élément JSX
+- [ ] `ReactElement` accepte aussi les chaînes
+- [ ] `ReactNode` est réservé aux composants classes
+> Pour `children` ou un slot affichable, `ReactNode` est presque toujours le bon choix. `ReactElement` sert quand on doit manipuler l'élément (ex. `cloneElement`), ce qui est rare.
+[doc]: React — Typer children | https://fr.react.dev/learn/typescript#typing-children
+
+### Ce code compile-t-il ?
+```tsx
+function supprimer(id: string) {}
+<Bouton onClick={supprimer} />  // Bouton: { onClick: () => void }
+```
+- [ ] Oui, le paramètre `id` sera simplement `undefined`
+- [x] Non : une fonction qui exige un paramètre n'est pas assignable à `() => void`
+- [ ] Oui, car `onClick` est un handler React
+- [ ] Non, car `supprimer` ne retourne rien
+> Un callback avec **plus** de paramètres obligatoires que le type attendu est refusé : `Bouton` n'appellerait jamais `supprimer` avec un `id`. On écrit `onClick={() => supprimer(item.id)}`.
+[doc]: Handbook — Compatibilité des fonctions | https://www.typescriptlang.org/fr/docs/handbook/2/functions.html

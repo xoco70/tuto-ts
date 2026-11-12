@@ -220,3 +220,67 @@ ThrottlerModule.forRoot([{ ttl: 60_000, limit: 10 }]); // + APP_GUARD ThrottlerG
 - [ ] Renvoyer la stack trace des erreurs 500 au client
 > Exposer les stack traces aide les attaquants (chemins, versions, requêtes). Les erreurs détaillées vont dans les logs, pas dans la réponse.
 [doc]: NestJS — Helmet (EN) | https://docs.nestjs.com/security/helmet
+
+### Quelle durée de vie viser pour un access token JWT accompagné d'un refresh token ?
+- [ ] 30 jours, pour éviter de reconnecter l'utilisateur
+- [x] Courte (de l'ordre de 5 à 15 minutes)
+- [ ] Illimitée, la révocation se fait côté client
+- [ ] Exactement la durée de la session navigateur
+> Un access token stateless ne peut pas être révoqué facilement : sa durée de vie courte **borne** la fenêtre d'exploitation en cas de vol. Le refresh token, stocké en cookie `HttpOnly` et vérifié côté serveur, sert à en obtenir de nouveaux.
+[doc]: OWASP — JSON Web Token Cheat Sheet (EN) | https://cheatsheetseries.owasp.org/cheatsheets/JSON_Web_Token_Cheat_Sheet.html
+
+### Pourquoi fixer explicitement les algorithmes acceptés lors de la vérification d'un JWT (`algorithms: ['RS256']`) ?
+- [ ] Pour accélérer la vérification
+- [x] Pour empêcher un attaquant d'imposer un algorithme faible ou `none` via l'en-tête du token
+- [ ] Parce que l'en-tête `alg` est chiffré
+- [ ] C'est obligatoire uniquement pour les tokens expirés
+> L'en-tête `alg` est contrôlé par l'émetteur… ou par l'attaquant. Les attaques historiques : `alg: none`, ou confusion RS256/HS256 où la clé publique est utilisée comme secret HMAC. La RFC 8725 recommande de n'accepter qu'une liste fermée d'algorithmes.
+[doc]: RFC 8725 — JWT Best Current Practices (EN) | https://datatracker.ietf.org/doc/html/rfc8725
+
+### Plusieurs microservices doivent vérifier les JWT émis par un service d'authentification. Quel choix est le plus sûr ?
+- [ ] HS256 avec le même secret partagé par tous les services
+- [x] RS256 / ES256 : seul le service d'auth détient la clé privée, les autres vérifient avec la clé publique (JWKS)
+- [ ] Ne pas signer les tokens, le réseau interne est sûr
+- [ ] Chiffrer les tokens en AES sans signature
+> Avec un secret HMAC partagé, chaque service capable de **vérifier** est aussi capable de **forger** des tokens. Une signature asymétrique limite la clé sensible à un seul service et permet la rotation via un endpoint JWKS.
+[doc]: jwt.io — Introduction (EN) | https://jwt.io/introduction
+
+### Pourquoi comparer un token secret avec `crypto.timingSafeEqual` plutôt qu'avec `===` ?
+- [ ] `===` ne fonctionne pas sur les chaînes longues
+- [x] `===` s'arrête au premier caractère différent : le temps de réponse peut révéler le secret petit à petit
+- [ ] `timingSafeEqual` est plus rapide
+- [ ] Pour gérer l'encodage UTF-8
+> C'est une attaque par canal auxiliaire (*timing attack*). On l'applique aux comparaisons de signatures HMAC (webhooks), de tokens d'API ou de codes de réinitialisation. Les deux `Buffer` doivent avoir la même longueur.
+[doc]: Node.js — crypto.timingSafeEqual (EN) | https://nodejs.org/api/crypto.html#cryptotimingsafeequala-b
+
+### Quelles propriétés doit avoir un lien de réinitialisation de mot de passe ? (plusieurs réponses)
+- [x] Un token aléatoire long, généré par un générateur cryptographique
+- [x] Une expiration courte et un usage unique
+- [x] Le token stocké haché en base, comme un mot de passe
+- [ ] L'identifiant de l'utilisateur en clair comme seul paramètre
+> Un token prévisible ou réutilisable revient à une prise de contrôle de compte. On répond aussi le même message que l'email existe ou non, pour ne pas permettre l'énumération des comptes.
+[doc]: OWASP — Forgot Password Cheat Sheet (EN) | https://cheatsheetseries.owasp.org/cheatsheets/Forgot_Password_Cheat_Sheet.html
+
+### Pour une SPA qui utilise un fournisseur OAuth2 / OpenID Connect, quel flux est recommandé aujourd'hui ?
+- [ ] Le flux implicite (token dans l'URL)
+- [x] Authorization Code avec PKCE
+- [ ] Resource Owner Password Credentials
+- [ ] Client Credentials
+> Le flux implicite est déconseillé (token exposé dans l'URL et l'historique). PKCE protège l'échange du code d'autorisation sans secret client, impossible à garder dans un navigateur. Souvent, un backend (« BFF ») fait l'échange et pose un cookie de session.
+[doc]: RFC 7636 — PKCE (EN) | https://datatracker.ietf.org/doc/html/rfc7636
+
+### Un utilisateur peut modifier un article seulement s'il en est l'auteur ou s'il est modérateur. Quel modèle d'autorisation correspond ?
+- [ ] RBAC pur (rôles uniquement)
+- [x] ABAC / règles sur les attributs (rôle **et** relation avec la ressource), par exemple avec CASL
+- [ ] CORS
+- [ ] Une simple vérification du JWT
+> Les rôles seuls ne savent pas répondre à « est-ce **son** article ? ». La documentation NestJS propose CASL pour exprimer des règles comme `can('update', 'Article', { authorId: user.id })`, vérifiées sur la ressource chargée.
+[doc]: NestJS — Authorization (EN) | https://docs.nestjs.com/security/authorization
+
+### La connexion se fait avec un email, mais la stratégie Passport `local` cherche `username` dans le body. Comment corriger ?
+- [ ] Renommer le champ `email` en `username` dans le front
+- [x] `super({ usernameField: 'email' })` dans le constructeur de la `LocalStrategy`
+- [ ] Créer un middleware qui copie `email` dans `username`
+- [ ] Utiliser la stratégie `jwt` à la place
+> Les options passées à `super()` dans une `PassportStrategy` sont celles de la stratégie Passport sous-jacente. `validate(email, password)` reçoit ensuite les bons champs.
+[doc]: NestJS — Passport recipe (EN) | https://docs.nestjs.com/recipes/passport

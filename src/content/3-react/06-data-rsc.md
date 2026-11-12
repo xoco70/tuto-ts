@@ -230,3 +230,67 @@ export default async function Page() {
 - [ ] Validation du schéma des réponses
 > TanStack Query ne valide pas les données : il faut le faire dans la `queryFn` (Zod) si la réponse n'est pas garantie.
 [doc]: TanStack Query — Important defaults (EN) | https://tanstack.com/query/latest/docs/framework/react/guides/important-defaults
+
+### Pourquoi inclure les paramètres dans la clé : `queryKey: ['orders', { page, statut }]` ?
+- [ ] Pour le style, la clé n'a pas d'impact
+- [x] Chaque combinaison a son propre cache, et un changement de paramètre déclenche automatiquement un nouveau chargement
+- [ ] Pour que la requête soit envoyée en POST
+- [ ] Pour invalider toutes les requêtes à chaque changement
+> La clé est l'**identité** des données. Toute variable utilisée par la `queryFn` doit y figurer — sinon on affiche les données de la page 1 sur la page 2. `invalidateQueries({ queryKey: ['orders'] })` invalide ensuite toutes les variantes d'un coup.
+[doc]: TanStack Query — Query keys (EN) | https://tanstack.com/query/latest/docs/framework/react/guides/query-keys
+
+### Comment attendre `userId` avant de lancer une requête qui en dépend ?
+- [ ] `if (!userId) return;` avant `useQuery`
+- [x] `useQuery({ queryKey: ['projets', userId], queryFn: …, enabled: !!userId })`
+- [ ] Un `useEffect` qui appelle `refetch()`
+- [ ] Ce n'est pas possible avec TanStack Query
+> L'option `enabled` met la requête en attente sans violer les règles des hooks (le `return` anticipé avant un hook est interdit). Elle démarre dès que la condition devient vraie.
+[doc]: TanStack Query — Dependent queries (EN) | https://tanstack.com/query/latest/docs/framework/react/guides/dependent-queries
+
+### Dans une liste paginée, comment éviter l'écran de chargement vide à chaque changement de page ?
+- [ ] `staleTime: Infinity`
+- [x] `placeholderData: keepPreviousData` : la page précédente reste affichée pendant le chargement de la suivante
+- [ ] Charger toutes les pages au démarrage
+- [ ] `gcTime: 0`
+> `isPlaceholderData` permet d'afficher un indicateur discret et de désactiver le bouton « suivant ». Pour un défilement infini, `useInfiniteQuery` est plus adapté.
+[doc]: TanStack Query — Paginated queries (EN) | https://tanstack.com/query/latest/docs/framework/react/guides/paginated-queries
+
+### Comment implémenter une mise à jour optimiste avec retour arrière dans TanStack Query ?
+- [ ] Modifier le cache dans `onSuccess` seulement
+- [x] Dans `onMutate` : annuler les requêtes en cours, sauvegarder l'ancien cache, écrire la valeur optimiste ; dans `onError`, restaurer la sauvegarde ; dans `onSettled`, invalider
+- [ ] Appeler `refetch()` avant la mutation
+- [ ] Utiliser `staleTime: 0`
+> `onMutate` retourne un contexte (l'ancienne valeur) que `onError` reçoit. L'invalidation finale resynchronise avec la vérité du serveur. La version simple consiste à afficher `mutation.variables` pendant que la mutation est en cours.
+[doc]: TanStack Query — Optimistic updates (EN) | https://tanstack.com/query/latest/docs/framework/react/guides/optimistic-updates
+
+### Que fait `<Suspense fallback={<Spinner />}>` autour d'un composant qui charge des données compatibles Suspense ?
+- [ ] Il intercepte les erreurs de chargement
+- [x] Il affiche le `fallback` tant qu'un descendant est suspendu, puis le contenu une fois prêt
+- [ ] Il retarde l'affichage de toute la page
+- [ ] Il met les données en cache
+> Suspense gère l'état de **chargement** déclarativement ; les erreurs relèvent d'une error boundary. En SSR (streaming), chaque frontière Suspense permet d'envoyer le HTML de la page par morceaux dès qu'ils sont prêts.
+[doc]: React — Suspense | https://fr.react.dev/reference/react/Suspense
+
+### Quelle prop ne peut pas être passée d'un Server Component à un Client Component ?
+- [ ] Une chaîne
+- [ ] Un objet de données simples
+- [x] Une fonction ordinaire, comme `onClick={() => …}`
+- [ ] Une Promise
+> Les props franchissent la frontière serveur → client par **sérialisation**. Les fonctions ordinaires ne sont pas sérialisables ; seules les Server Functions (`'use server'`) peuvent être passées. Les Promises sont acceptées et lues côté client avec `use`.
+[doc]: React — Types sérialisables | https://fr.react.dev/reference/rsc/use-client#serializable-types
+
+### Comment empêcher qu'un module contenant une clé d'API soit importé par erreur dans un Client Component ?
+- [ ] En le nommant `server.ts`
+- [x] En ajoutant `import 'server-only'` en tête du module : l'import côté client fait échouer le build
+- [ ] En mettant `'use server'` en tête du module
+- [ ] C'est impossible, il faut une revue de code
+> `'use server'` déclare des Server Functions **appelables depuis le client** — l'inverse de ce qu'on veut. `server-only` est un garde-fou de build. Rappel : seules les variables `NEXT_PUBLIC_*` sont exposées au navigateur.
+[doc]: Next.js — Préserver le code serveur (EN) | https://nextjs.org/docs/app/getting-started/server-and-client-components#preventing-environment-poisoning
+
+### Après une Server Function qui crée un article, comment rafraîchir la page de liste mise en cache par Next.js ?
+- [ ] `router.reload()` côté client
+- [x] Appeler `revalidatePath('/articles')` (ou `revalidateTag`) dans la Server Function
+- [ ] Vider le cache du navigateur
+- [ ] Redéployer l'application
+> L'invalidation se fait côté serveur, au plus près de la mutation. Le prochain rendu de la route régénère les données ; combiné à `redirect()`, l'utilisateur voit directement la liste à jour.
+[doc]: Next.js — revalidatePath (EN) | https://nextjs.org/docs/app/api-reference/functions/revalidatePath

@@ -235,3 +235,67 @@ export class UsersResolver {
 - [ ] La lecture d'un utilisateur par son id
 > Tout ce qui est lent, faillible ou dépendant d'un tiers gagne à être asynchrone : la requête renvoie vite (202 Accepted + id de job) et le traitement bénéficie de retries.
 [doc]: NestJS — Queues (EN) | https://docs.nestjs.com/techniques/queues
+
+### `configService.get<number>('PORT')` renvoie-t-il un nombre ?
+- [ ] Oui, le générique convertit la valeur
+- [x] Non : les variables d'environnement sont des chaînes, le générique ne fait qu'annoncer un type
+- [ ] Oui, si `PORT` contient uniquement des chiffres
+- [ ] Non, il renvoie toujours `undefined`
+> Le paramètre de type est une simple **assertion**. Pour obtenir un vrai nombre, il faut transformer à la validation (Joi `Joi.number()`, Zod `z.coerce.number()`) ou dans une fonction `registerAs`.
+[doc]: NestJS — Configuration (EN) | https://docs.nestjs.com/techniques/configuration#using-the-configservice
+
+### Comment propager un identifiant de corrélation dans tous les logs d'une requête sans passer en scope `REQUEST` ?
+- [ ] Une variable globale
+- [x] `AsyncLocalStorage` (par exemple via `nestjs-cls`)
+- [ ] Un singleton qui stocke la dernière requête
+- [ ] Un cookie
+> `AsyncLocalStorage` conserve un contexte à travers les `await` d'une même requête, sans recréer les providers à chaque requête (ce que fait le scope `REQUEST`). Les loggers comme pino peuvent ensuite l'ajouter à chaque ligne.
+[doc]: NestJS — Async Local Storage (EN) | https://docs.nestjs.com/recipes/async-local-storage
+
+### Comment pousser des notifications du serveur vers le navigateur sans WebSocket, sur une connexion HTTP simple ?
+- [ ] Avec du long polling uniquement
+- [x] Avec les Server-Sent Events : `@Sse('notifications')` retourne un `Observable`
+- [ ] Avec `@MessagePattern`
+- [ ] C'est impossible en HTTP
+> Les SSE sont unidirectionnels (serveur → client), passent par HTTP standard, et le navigateur se reconnecte automatiquement (`EventSource`). Suffisant pour des notifications ou une progression ; WebSocket reste utile pour des échanges bidirectionnels.
+[doc]: NestJS — Server-Sent Events (EN) | https://docs.nestjs.com/techniques/server-sent-events
+
+### Quelles réponses le `CacheInterceptor` de Nest met-il en cache par défaut ?
+- [ ] Toutes les requêtes
+- [x] Uniquement les requêtes `GET`
+- [ ] Uniquement les `POST`
+- [ ] Aucune, il faut configurer chaque route
+> Mettre en cache une mutation n'aurait pas de sens. La clé par défaut est l'URL : attention aux réponses personnalisées par utilisateur, qu'il faut exclure ou dont il faut adapter la clé (`trackBy`).
+[doc]: NestJS — Caching (EN) | https://docs.nestjs.com/techniques/caching
+
+### L'API tourne sur 4 instances avec `@nestjs/throttler` à 10 requêtes/minute. Un client peut-il faire 40 requêtes par minute ?
+- [ ] Non, la limite est partagée automatiquement
+- [x] Oui, si le stockage est en mémoire : chaque instance compte de son côté. Il faut un stockage partagé (Redis)
+- [ ] Non, le load balancer applique la limite
+- [ ] Oui, mais seulement en HTTP/2
+> Tout état en mémoire est local à une instance. Pour un rate limiting cohérent, le throttler doit utiliser un stockage commun — ou la limite est appliquée en amont (API gateway, reverse proxy).
+[doc]: NestJS — Rate limiting, storages (EN) | https://docs.nestjs.com/security/rate-limiting#storages
+
+### Pourquoi le SDK OpenTelemetry doit-il être initialisé avant d'importer le reste de l'application ?
+- [ ] Pour lire les variables d'environnement
+- [x] L'auto-instrumentation modifie les modules (`http`, `pg`, `express`…) au chargement : chargés avant, ils ne seraient pas tracés
+- [ ] Pour éviter les dépendances circulaires
+- [ ] Ce n'est pas nécessaire
+> On place l'initialisation dans un fichier chargé en premier (`node --import ./tracing.js dist/main.js`, ou première ligne de `main.ts`). Sinon les traces n'apparaissent pas, sans aucune erreur.
+[doc]: OpenTelemetry — Node.js getting started (EN) | https://opentelemetry.io/docs/languages/js/getting-started/nodejs/
+
+### Que devient un job BullMQ qui a échoué à toutes ses tentatives (`attempts: 5`) ?
+- [ ] Il est supprimé
+- [x] Il passe dans l'ensemble des jobs `failed`, où il peut être inspecté et relancé
+- [ ] Il est réessayé indéfiniment
+- [ ] Il fait planter le worker
+> Les jobs en échec définitif jouent le rôle d'une *dead letter queue* : il faut les surveiller (alerte, tableau de bord type Bull Board) et prévoir une procédure de reprise. `removeOnFail` permet d'en limiter le nombre conservé.
+[doc]: BullMQ — Retrying failing jobs (EN) | https://docs.bullmq.io/guide/retrying-failing-jobs
+
+### Quelle est la différence entre les approches « code first » et « schema first » de `@nestjs/graphql` ?
+- [ ] Code first ne supporte pas les mutations
+- [x] Code first génère le schéma SDL à partir de classes décorées ; schema first génère les types TypeScript à partir du SDL
+- [ ] Schema first est réservé aux microservices
+- [ ] Il n'y a aucune différence
+> Code first garde une seule source de vérité dans le code TypeScript (proche des DTO). Schema first convient quand le schéma GraphQL est le contrat partagé avec d'autres équipes.
+[doc]: NestJS — GraphQL quick start (EN) | https://docs.nestjs.com/graphql/quick-start

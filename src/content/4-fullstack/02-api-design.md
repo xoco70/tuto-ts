@@ -199,3 +199,83 @@ Options : générer les types depuis OpenAPI (`openapi-typescript`, Orval), part
 - [x] Utiliser tRPC (avec un adaptateur dans l'application Node)
 > La copie manuelle diverge inévitablement. Les trois autres approches font échouer la compilation du front quand le contrat change.
 [doc]: openapi-typescript (EN) | https://openapi-ts.dev/
+
+### Quelle est la différence entre `PUT` et `PATCH` ?
+- [ ] Aucune
+- [x] `PUT` remplace entièrement la ressource ; `PATCH` applique une modification partielle
+- [ ] `PATCH` est idempotent, `PUT` ne l'est pas
+- [ ] `PUT` sert à créer, `PATCH` à supprimer
+> Un `PUT` sans le champ `telephone` doit l'effacer ; un `PATCH` le laisse intact. `PUT` est idempotent par définition, `PATCH` ne l'est pas forcément (ex. « incrémenter de 1 »).
+[doc]: MDN — PATCH | https://developer.mozilla.org/fr/docs/Web/HTTP/Reference/Methods/PATCH
+
+### Un client dépasse la limite de requêtes autorisée. Que renvoyer ?
+- [ ] 403 Forbidden
+- [ ] 503 Service Unavailable
+- [x] 429 Too Many Requests, idéalement avec un en-tête `Retry-After`
+- [ ] 400 Bad Request
+> `Retry-After` indique quand réessayer ; les en-têtes `RateLimit-*` peuvent aussi exposer le quota restant. Un client bien écrit respecte ce délai plutôt que de réessayer immédiatement.
+[doc]: MDN — 429 Too Many Requests | https://developer.mozilla.org/fr/docs/Web/HTTP/Reference/Status/429
+
+### `POST /exports` lance un export qui prend plusieurs minutes. Quelle réponse est la plus adaptée ?
+- [ ] Garder la connexion ouverte jusqu'à la fin
+- [x] `202 Accepted` avec l'URL d'une ressource de suivi (`/exports/123`) à interroger, ou un webhook en fin de traitement
+- [ ] `201 Created` avec le fichier vide
+- [ ] `200 OK` puis envoyer le fichier par email sans autre information
+> Une requête HTTP longue se heurte aux timeouts (load balancer, proxy, navigateur). On modélise l'opération comme une ressource avec un statut (`pending`, `done`, `failed`) et un lien vers le résultat.
+[doc]: MDN — 202 Accepted | https://developer.mozilla.org/fr/docs/Web/HTTP/Reference/Status/202
+
+### Un body est du JSON valide mais `dateFin` précède `dateDebut`. Quel statut est souvent préféré à 400 pour cette erreur sémantique ?
+- [ ] 409 Conflict
+- [x] 422 Unprocessable Content
+- [ ] 404 Not Found
+- [ ] 500 Internal Server Error
+> 400 signale une requête mal formée ; 422 une requête bien formée mais **sémantiquement** invalide. Les deux conventions existent (NestJS renvoie 400 par défaut) : l'important est d'être cohérent et documenté.
+[doc]: MDN — 422 Unprocessable Content | https://developer.mozilla.org/fr/docs/Web/HTTP/Reference/Status/422
+
+### Comment annoncer aux clients qu'un endpoint sera retiré à une date donnée ?
+- [ ] En le supprimant sans prévenir
+- [x] Avec les en-têtes `Deprecation` et `Sunset`, la documentation, et un suivi des clients qui l'utilisent encore
+- [ ] En renvoyant une 500 aléatoire pour inciter à migrer
+- [ ] En changeant son URL
+> L'en-tête `Sunset` (RFC 8594) donne la date de retrait ; les logs ou métriques permettent de contacter les derniers utilisateurs avant l'échéance. Une dépréciation est un processus, pas un événement.
+[doc]: RFC 8594 — Sunset header (EN) | https://www.rfc-editor.org/rfc/rfc8594.html
+
+### Quelle requête du front déclenche une requête CORS *preflight* (`OPTIONS`) ?
+- [ ] `GET /produits` sans en-tête particulier
+- [x] `POST /orders` avec `Content-Type: application/json` vers une autre origine
+- [ ] Un `<img src>` vers une autre origine
+- [ ] Une requête vers la même origine
+> Une requête « non simple » (méthode autre que GET/HEAD/POST, en-tête personnalisé comme `Authorization`, ou `Content-Type` JSON) est précédée d'un preflight. `Access-Control-Max-Age` permet de le mettre en cache pour limiter la latence.
+[doc]: MDN — Requête de pré-vérification | https://developer.mozilla.org/fr/docs/Glossary/Preflight_request
+
+### Dans quel cas gRPC est-il un bon choix par rapport à REST/JSON ?
+- [ ] Pour une API publique consommée par des navigateurs
+- [x] Pour des appels internes entre services, à fort volume, avec un contrat typé (Protobuf) et du streaming
+- [ ] Pour servir des pages HTML
+- [ ] Pour simplifier le débogage avec `curl`
+> gRPC repose sur HTTP/2 et un format binaire efficace, avec génération de clients dans de nombreux langages. Côté navigateur, il faut un proxy (gRPC-Web) ; pour une API publique, REST reste plus accessible.
+[doc]: gRPC — Introduction (EN) | https://grpc.io/docs/what-is-grpc/introduction/
+
+### Quelle URL suit le mieux les conventions REST pour les commandes d'un client ?
+- [ ] `GET /getOrdersForCustomer?id=42`
+- [x] `GET /customers/42/orders`
+- [ ] `POST /customers/orders/list`
+- [ ] `GET /customer_42_orders`
+> Les ressources sont des **noms** au pluriel, l'action est portée par la méthode HTTP. On évite cependant les imbrications profondes (`/a/1/b/2/c/3/d`) : au-delà d'un niveau, on préfère des filtres (`/orders?customerId=42`).
+[doc]: Google Cloud — Noms des ressources (EN) | https://cloud.google.com/apis/design/resource_names
+
+### Comment un client demande-t-il une réponse en CSV plutôt qu'en JSON au même endpoint ?
+- [ ] Avec `Content-Type: text/csv` dans la requête
+- [x] Avec l'en-tête `Accept: text/csv` (négociation de contenu)
+- [ ] Avec `?format=` uniquement, aucun en-tête n'existe pour cela
+- [ ] Avec une méthode HTTP différente
+> `Accept` exprime ce que le client veut recevoir ; `Content-Type` décrit ce qu'il envoie. Le serveur répond avec le bon `Content-Type`, ou `406 Not Acceptable`. Un paramètre `?format=csv` est une alternative pragmatique et plus facile à partager.
+[doc]: MDN — Négociation de contenu | https://developer.mozilla.org/fr/docs/Web/HTTP/Guides/Content_negotiation
+
+### Dans un design « API first », quand écrit-on la spécification OpenAPI ?
+- [ ] Après la mise en production, pour la documentation
+- [x] Avant l'implémentation, pour la valider avec les consommateurs et générer clients, mocks et tests
+- [ ] Jamais, elle est générée automatiquement
+- [ ] Uniquement pour les API publiques
+> Le contrat devient l'artefact de référence : le front peut travailler contre un mock pendant que le back implémente, et la CI détecte les écarts. L'approche « code first » (Swagger généré par NestJS) est plus rapide mais fait du code la source de vérité.
+[doc]: OpenAPI — Bonnes pratiques (EN) | https://learn.openapis.org/best-practices.html

@@ -225,3 +225,67 @@ function App() {
 - [x] Garder l'instance d'une librairie tierce (carte, éditeur)
 > Une valeur affichée doit être dans l'état : modifier une ref ne met pas l'écran à jour.
 [doc]: React — useRef | https://fr.react.dev/reference/react/useRef
+
+### Que reçoit un composant qui appelle `useContext(ThemeContext)` sans aucun `Provider` au-dessus de lui ?
+- [ ] Une erreur
+- [x] La valeur par défaut passée à `createContext(valeurParDefaut)`
+- [ ] `undefined`, toujours
+- [ ] La valeur du dernier Provider rendu ailleurs
+> La valeur par défaut ne sert que s'il n'y a **aucun** fournisseur dans les ancêtres. C'est pour cela qu'on choisit souvent `null` comme défaut et qu'on lève une erreur explicite dans un hook `useTheme()`.
+[doc]: React — createContext | https://fr.react.dev/reference/react/createContext
+
+### En React 19, comment fournir une valeur de contexte ?
+- [ ] Uniquement avec `<ThemeContext.Provider value="dark">`
+- [x] `<ThemeContext value="dark">` fonctionne directement
+- [ ] `<Provider context={ThemeContext} value="dark">`
+- [ ] Avec `useContext(ThemeContext, 'dark')`
+> React 19 permet d'utiliser le contexte lui-même comme fournisseur. `Context.Provider` fonctionne toujours mais sera déprécié à terme.
+[doc]: React 19 — Context comme fournisseur | https://fr.react.dev/blog/2024/12/05/react-19#context-as-a-provider
+
+### Pourquoi séparer l'état et `dispatch` dans deux contextes distincts ?
+- [ ] Parce qu'un contexte ne peut contenir qu'une valeur
+- [x] Pour que les composants qui ne font que déclencher des actions ne re-rendent pas à chaque changement d'état
+- [ ] Parce que `dispatch` change à chaque rendu
+- [ ] Pour pouvoir utiliser `useReducer`
+> `dispatch` a une identité **stable** : un contexte qui ne contient que lui ne change jamais. Les boutons d'action le consomment sans être affectés par les mises à jour de l'état, consommé seulement par ceux qui l'affichent.
+[doc]: React — Mise à l'échelle avec un réducteur et un contexte | https://fr.react.dev/learn/scaling-up-with-reducer-and-context
+
+### Pourquoi un custom hook doit-il commencer par `use` ?
+- [ ] C'est obligatoire pour que JavaScript l'exécute
+- [x] Pour que React et le linter sachent qu'il appelle des hooks et appliquent les règles des hooks
+- [ ] Pour qu'il soit mis en cache automatiquement
+- [ ] Ce n'est qu'une convention sans conséquence
+> La convention permet au linter `eslint-plugin-react-hooks` (et au React Compiler) de vérifier les appels conditionnels et les dépendances. Une fonction utilitaire qui n'appelle aucun hook ne doit **pas** commencer par `use`.
+[doc]: React — Les noms des hooks commencent par use | https://fr.react.dev/learn/reusing-logic-with-custom-hooks#hook-names-always-start-with-use
+
+### À quoi sert `useDeferredValue(recherche)` ?
+- [ ] À retarder un appel réseau de 300 ms (debounce)
+- [x] À rendre une partie de l'UI avec une version « en retard » de la valeur, pour garder la saisie réactive
+- [ ] À mémoriser une valeur entre deux rendus
+- [ ] À différer l'exécution d'un effet
+> React rend d'abord avec l'ancienne valeur, puis tente en arrière-plan un rendu avec la nouvelle, interruptible si l'utilisateur continue de taper. Ce n'est pas un debounce : aucun délai fixe, et cela n'économise pas d'appels réseau.
+[doc]: React — useDeferredValue | https://fr.react.dev/reference/react/useDeferredValue
+
+### À quoi sert `useImperativeHandle` ?
+- [ ] À exécuter un effet avant l'affichage
+- [x] À personnaliser ce qu'un composant expose via sa `ref` (ex. seulement `focus()` et `scrollIntoView()`)
+- [ ] À forcer un nouveau rendu
+- [ ] À créer un contexte impératif
+> Au lieu d'exposer le nœud DOM entier, le composant publie une API restreinte. À réserver aux comportements impossibles à exprimer avec des props (focus, scroll, animation).
+[doc]: React — useImperativeHandle | https://fr.react.dev/reference/react/useImperativeHandle
+
+### Quelle nouveauté React 19 apporte-t-il aux *ref callbacks* ?
+- [ ] Ils sont supprimés au profit de `useRef`
+- [x] Ils peuvent retourner une fonction de nettoyage, appelée quand l'élément est retiré
+- [ ] Ils sont appelés à chaque rendu
+- [ ] Ils reçoivent le composant parent en argument
+> `<div ref={(node) => { const obs = observe(node); return () => obs.disconnect(); }}>` : on peut brancher un `ResizeObserver` ou un `IntersectionObserver` sur un élément de liste sans effet séparé.
+[doc]: React — Callback ref | https://fr.react.dev/reference/react-dom/components/common#ref-callback
+
+### Quelle règle doit respecter la fonction passée à `useReducer` ?
+- [ ] Elle doit être `async`
+- [x] Elle doit être pure : calculer le nouvel état à partir de `(state, action)`, sans effet de bord ni mutation
+- [ ] Elle doit appeler `dispatch` à la fin
+- [ ] Elle doit retourner `undefined` pour les actions inconnues
+> En StrictMode, React appelle le reducer deux fois pour révéler les impuretés. Les appels réseau ou les `localStorage.setItem` se font dans les gestionnaires d'événements ou les effets. Pour une action inconnue, on retourne l'état inchangé ou on lève une erreur.
+[doc]: React — useReducer | https://fr.react.dev/reference/react/useReducer

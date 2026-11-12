@@ -185,3 +185,83 @@ Documenter les choix structurants dans des **ADR** (*Architecture Decision Recor
 - [x] Rendre les frontières entre modules explicites et vérifiables
 > Une architecture sur-dimensionnée coûte autant qu'une architecture sous-dimensionnée. Des outils (règles ESLint `import/no-restricted-paths`, dependency-cruiser, Nx module boundaries) permettent de vérifier les frontières en CI.
 [doc]: Martin Fowler — Software architecture guide (EN) | https://martinfowler.com/architecture/
+
+### Une classe `Carre` hérite de `Rectangle`, et son `setLargeur` modifie aussi la hauteur, ce qui casse le code qui manipulait des rectangles. Quel principe est violé ?
+- [ ] Ouvert/fermé
+- [x] Substitution de Liskov
+- [ ] Inversion des dépendances
+- [ ] Responsabilité unique
+> Un sous-type doit pouvoir remplacer son type parent **sans casser** les attentes du code appelant. Une sous-classe qui refuse une opération du parent signale une hiérarchie mal choisie : la composition est souvent préférable.
+[doc]: Wikipédia — Principe de substitution de Liskov | https://fr.wikipedia.org/wiki/Principe_de_substitution_de_Liskov
+
+### Une interface `Repository` impose `find`, `save`, `delete`, `exportCsv` et `sendReport`. Quel principe SOLID est en cause ?
+- [ ] Liskov
+- [x] Ségrégation des interfaces
+- [ ] Ouvert/fermé
+- [ ] Aucun
+> Les clients ne doivent pas dépendre de méthodes qu'ils n'utilisent pas. On découpe en interfaces ciblées (`Lecteur`, `Exporteur`…), plus faciles à implémenter et à doubler en test.
+[doc]: Wikipédia — Principe de ségrégation des interfaces | https://fr.wikipedia.org/wiki/Principe_de_s%C3%A9gr%C3%A9gation_des_interfaces
+
+### Qu'est-ce que l'*event sourcing* ?
+- [ ] Publier des événements dans un bus après chaque écriture
+- [x] Stocker la suite des événements métier comme source de vérité, et reconstruire l'état en les rejouant
+- [ ] Synchroniser deux bases via leurs logs
+- [ ] Un synonyme de CQRS
+> On obtient un historique complet et auditable, mais au prix d'une vraie complexité : versionnement des événements, projections, snapshots, cohérence à terme. Souvent combiné avec CQRS, mais les deux sont indépendants.
+[doc]: Martin Fowler — Event Sourcing (EN) | https://martinfowler.com/eaaDev/EventSourcing.html
+
+### Que dit la loi de Conway ?
+- [ ] Le nombre de bugs double avec la taille de l'équipe
+- [x] L'architecture d'un système tend à reproduire la structure de communication de l'organisation qui le conçoit
+- [ ] Tout projet prend plus de temps que prévu
+- [ ] Un service ne doit pas dépasser une équipe de deux pizzas
+> Trois équipes produisent volontiers trois services, avec des frontières qui suivent l'organigramme. La « manœuvre de Conway inverse » consiste à organiser les équipes selon l'architecture visée.
+[doc]: Martin Fowler — Conway's Law (EN) | https://martinfowler.com/bliki/ConwaysLaw.html
+
+### Comment remplacer progressivement un vieux monolithe sans tout réécrire d'un coup ?
+- [ ] Geler le monolithe pendant un an de réécriture
+- [x] Le pattern *strangler fig* : router progressivement des fonctionnalités vers le nouveau système jusqu'à ce que l'ancien ne serve plus rien
+- [ ] Copier la base de données et laisser les deux systèmes écrire
+- [ ] Ajouter une couche de cache devant le monolithe
+> Une façade (reverse proxy, API gateway) envoie chaque route soit vers l'ancien, soit vers le nouveau système. On livre de la valeur en continu et on peut s'arrêter à tout moment, contrairement au « big bang ».
+[doc]: Martin Fowler — Strangler Fig Application (EN) | https://martinfowler.com/bliki/StranglerFigApplication.html
+
+### Qu'est-ce qu'un « monolithe modulaire » ?
+- [ ] Un monolithe découpé en plusieurs dépôts Git
+- [x] Une seule application déployée, organisée en modules aux frontières explicites qui ne partagent pas leurs données internes
+- [ ] Un ensemble de microservices déployés ensemble
+- [ ] Un monolithe sans base de données
+> On garde la simplicité de déploiement d'un monolithe tout en préparant une éventuelle extraction en services. Dans NestJS : des modules métier qui n'exportent qu'une façade et ne lisent jamais les tables des autres.
+[doc]: microservices.io — Monolithic architecture (EN) | https://microservices.io/patterns/monolithic.html
+
+### Deux fonctions se ressemblent à 80 %. Un collègue veut immédiatement créer une abstraction commune. Quelle réponse est la plus pragmatique ?
+- [ ] Toujours factoriser dès la deuxième occurrence
+- [x] Attendre un troisième cas (*rule of three*) : une mauvaise abstraction coûte plus cher qu'une duplication
+- [ ] Ne jamais factoriser
+- [ ] Copier-coller est toujours préférable
+> Factoriser trop tôt fige une abstraction avant de comprendre ce qui varie vraiment, puis on l'alourdit de paramètres et de `if`. La duplication est facile à retirer plus tard ; une mauvaise abstraction l'est beaucoup moins.
+[doc]: Martin Fowler — Yagni (EN) | https://martinfowler.com/bliki/Yagni.html
+
+### Selon le théorème CAP, que doit choisir un système distribué au moment d'une partition réseau ?
+- [ ] Entre performance et sécurité
+- [x] Entre cohérence (refuser certaines requêtes) et disponibilité (répondre avec des données peut-être obsolètes)
+- [ ] Entre SQL et NoSQL
+- [ ] Rien, les trois propriétés sont toujours garanties
+> Les partitions arrivent : la vraie question est le comportement à ce moment-là. Un paiement préfère la cohérence ; un compteur de vues ou un fil d'actualité, la disponibilité.
+[doc]: Wikipédia — Théorème CAP | https://fr.wikipedia.org/wiki/Th%C3%A9or%C3%A8me_CAP
+
+### Que signifie « cohérence à terme » (*eventual consistency*) ?
+- [ ] Les données sont parfois perdues
+- [x] Sans nouvelle écriture, toutes les copies finissent par converger, mais une lecture peut renvoyer temporairement une valeur ancienne
+- [ ] La base finit toujours par planter
+- [ ] Les transactions sont validées en fin de journée
+> C'est le modèle des projections CQRS, des réplicas en lecture et des communications par événements. L'UI doit en tenir compte (mise à jour optimiste, message « en cours de traitement », lecture sur le primaire après une écriture).
+[doc]: Wikipédia — Cohérence à terme | https://fr.wikipedia.org/wiki/Coh%C3%A9rence_%C3%A0_terme
+
+### Que signifie « forte cohésion, faible couplage » ?
+- [ ] Beaucoup de modules qui dépendent tous les uns des autres
+- [x] Ce qui change ensemble est regroupé, et les modules dépendent peu des détails des autres
+- [ ] Un seul gros module pour tout
+- [ ] Des classes de moins de 100 lignes
+> Une bonne frontière se reconnaît à ce qu'une évolution métier touche un seul module. Si chaque fonctionnalité oblige à modifier cinq modules, le découpage suit des couches techniques plutôt que le métier.
+[doc]: Wikipédia — Cohésion (informatique) | https://fr.wikipedia.org/wiki/Coh%C3%A9sion_(informatique)

@@ -214,3 +214,71 @@ list(@Query('page') page: number) {}
 - [ ] `skipMissingProperties: true`
 > `whitelist` et `forbidNonWhitelisted` bloquent les champs non déclarés. `skipMissingProperties` affaiblit au contraire la validation (les propriétés absentes ne sont plus vérifiées). `disableErrorMessages: true` peut servir en prod pour ne pas divulguer la structure.
 [doc]: NestJS — Validation options (EN) | https://docs.nestjs.com/techniques/validation#using-the-built-in-validationpipe
+
+### Pourquoi le tableau n'est-il pas validé ?
+```ts
+@Post('bulk')
+createMany(@Body() dtos: CreateUserDto[]) {}
+```
+- [ ] `ValidationPipe` ne valide pas les `@Body()`
+- [x] Les génériques et types tableaux sont effacés : Nest ne voit que `Array` et ne sait pas quoi instancier
+- [ ] Il faut `@ValidateNested()` sur le paramètre
+- [ ] Il faut déclarer la route en `@Put()`
+> Le type émis par `emitDecoratorMetadata` pour `CreateUserDto[]` est simplement `Array`. Solutions : `new ParseArrayPipe({ items: CreateUserDto })`, ou un DTO enveloppe `{ users: CreateUserDto[] }` avec `@ValidateNested({ each: true })` et `@Type(() => CreateUserDto)`.
+[doc]: NestJS — Parsing and validating arrays (EN) | https://docs.nestjs.com/techniques/validation#parsing-and-validating-arrays
+
+### Comment valider que chaque élément de `tags: string[]` est une chaîne non vide ?
+- [ ] `@IsString() @IsNotEmpty()`
+- [x] `@IsArray() @IsString({ each: true }) @IsNotEmpty({ each: true })`
+- [ ] `@ValidateNested()`
+- [ ] `@IsArray(String)`
+> L'option `each: true` applique un décorateur à chaque élément d'un tableau (ou d'un `Set`/`Map`). Sans elle, `@IsString()` vérifie que la propriété entière est une chaîne — ce qui échoue pour un tableau.
+[doc]: class-validator — Validating arrays (EN) | https://github.com/typestack/class-validator#validating-arrays
+
+### Comment écrire `UpdateUserDto` (tous les champs optionnels, sans `password`) en conservant les décorateurs de validation ?
+- [ ] `type UpdateUserDto = Partial<Omit<CreateUserDto, 'password'>>`
+- [x] `class UpdateUserDto extends PartialType(OmitType(CreateUserDto, ['password'] as const)) {}`
+- [ ] `interface UpdateUserDto extends Partial<CreateUserDto> {}`
+- [ ] `class UpdateUserDto extends CreateUserDto {}` avec `@IsOptional()` partout
+> Les mapped types de `@nestjs/mapped-types` (ou `@nestjs/swagger`) produisent une **classe** et recopient les métadonnées de validation et de transformation. Ils se composent : `PickType`, `OmitType`, `PartialType`, `IntersectionType`.
+[doc]: NestJS — Mapped types (EN) | https://docs.nestjs.com/techniques/validation#mapped-types
+
+### Comment valider `siret` uniquement quand `type === 'entreprise'` ?
+- [ ] `@IsOptional()`
+- [x] `@ValidateIf((o) => o.type === 'entreprise')` suivi des règles sur `siret`
+- [ ] Deux DTO et un `if` dans le controller
+- [ ] `@IsDefined({ when: 'entreprise' })`
+> `@ValidateIf` désactive toutes les autres règles de la propriété quand la condition est fausse. Pour des formes vraiment différentes, une union discriminée validée par Zod (`z.discriminatedUnion`) est souvent plus lisible.
+[doc]: class-validator — Conditional validation (EN) | https://github.com/typestack/class-validator#conditional-validation
+
+### Où vérifier qu'un email n'est pas déjà utilisé lors d'une inscription ?
+- [ ] Uniquement dans un validateur asynchrone class-validator
+- [x] Dans le service, avec une contrainte d'unicité en base qui fait foi en cas de requêtes concurrentes
+- [ ] Uniquement côté front
+- [ ] Dans un middleware
+> Un validateur qui interroge la base ne protège pas d'une **course** entre deux inscriptions simultanées. La contrainte `UNIQUE` est la vraie garantie ; le service traduit la violation (code `23505` sous PostgreSQL, `P2002` avec Prisma) en `ConflictException` (409).
+[doc]: PostgreSQL — Unique constraints (EN) | https://www.postgresql.org/docs/current/ddl-constraints.html#DDL-CONSTRAINTS-UNIQUE-CONSTRAINTS
+
+### Comment nettoyer automatiquement les espaces autour d'un email avant validation ?
+- [ ] `@IsEmail({ trim: true })`
+- [x] `@Transform(({ value }) => (typeof value === 'string' ? value.trim().toLowerCase() : value))` avec `transform: true`
+- [ ] `@Trim()` de class-validator
+- [ ] Ce n'est pas possible avant la validation
+> class-transformer s'exécute avant class-validator quand `transform: true` est activé. Le test `typeof value === 'string'` évite de planter sur une entrée inattendue (un nombre, un objet), qui sera alors rejetée par `@IsEmail()`.
+[doc]: class-transformer — Additional data transformation (EN) | https://github.com/typestack/class-transformer#additional-data-transformation
+
+### Comment valider qu'une propriété `role` fait partie de l'enum `Role` ?
+- [ ] `@IsString()`
+- [x] `@IsEnum(Role)`
+- [ ] `@IsIn(Role)`
+- [ ] Le type `role: Role` suffit
+> Le type `Role` disparaît à l'exécution (et une union de littéraux encore plus). `@IsEnum(Role)` vérifie la valeur contre l'objet enum ; pour une union de littéraux, on utilise `@IsIn(['admin', 'user'])`.
+[doc]: class-validator — Validation decorators (EN) | https://github.com/typestack/class-validator#validation-decorators
+
+### Que fait l'option `transformOptions: { enableImplicitConversion: true }` du `ValidationPipe` ?
+- [ ] Elle valide les types TypeScript à l'exécution
+- [x] Elle convertit les valeurs selon le type déclaré dans le DTO (ex. `'2'` → `2` pour `page: number`), sans `@Type()`
+- [ ] Elle désactive la validation
+- [ ] Elle convertit les DTO en interfaces
+> Pratique pour les query params, mais à manier avec prudence : `'false'` devient `true` pour un `boolean` (chaîne non vide). Pour les booléens, préférez un `@Transform` explicite.
+[doc]: NestJS — Explicit conversion (EN) | https://docs.nestjs.com/techniques/validation#explicit-conversion

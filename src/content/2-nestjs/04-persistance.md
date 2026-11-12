@@ -223,3 +223,67 @@ const user = await prisma.user.findUnique({ where: { id }, select: { email: true
 - [ ] Mettre la requête dans une boucle `for await`
 > Les trois réduisent N requêtes à 1 ou 2. DataLoader est particulièrement adapté à GraphQL, où les resolvers de champs sont appelés élément par élément.
 [doc]: DataLoader (EN) | https://github.com/graphql/dataloader
+
+### PostgreSQL crée-t-il automatiquement un index sur une clé étrangère `orders.user_id` ?
+- [ ] Oui, comme pour une clé primaire
+- [x] Non : seule la colonne référencée (clé primaire ou unique) est indexée, il faut indexer `user_id` soi-même
+- [ ] Oui, mais seulement avec TypeORM
+- [ ] Non, et ce serait inutile
+> Les jointures `orders ↔ users` et les `ON DELETE CASCADE` deviennent lentes sans index sur la colonne de clé étrangère. Avec TypeORM : `@Index()` ; avec Prisma : `@@index([userId])`.
+[doc]: PostgreSQL — Foreign keys (EN) | https://www.postgresql.org/docs/current/ddl-constraints.html#DDL-CONSTRAINTS-FK
+
+### Quel est le niveau d'isolation par défaut de PostgreSQL ?
+- [ ] Read Uncommitted
+- [x] Read Committed
+- [ ] Repeatable Read
+- [ ] Serializable
+> En Read Committed, chaque requête voit les données validées au moment où **elle** démarre : deux `SELECT` dans une même transaction peuvent donc voir des valeurs différentes. Pour un « lire puis modifier » sûr, on utilise un `UPDATE` conditionnel, un verrou (`FOR UPDATE`) ou un niveau plus strict.
+[doc]: PostgreSQL — Transaction isolation (EN) | https://www.postgresql.org/docs/current/transaction-iso.html
+
+### Que fait `SELECT … FROM accounts WHERE id = $1 FOR UPDATE` dans une transaction ?
+- [ ] Il verrouille toute la table
+- [x] Il verrouille la ligne : les autres transactions qui veulent la modifier (ou la verrouiller) attendent la fin de la transaction
+- [ ] Il empêche toute lecture de la ligne
+- [ ] Il crée une copie de la ligne
+> C'est le **verrouillage pessimiste**, adapté aux conflits fréquents (soldes, stocks). Avec TypeORM : `lock: { mode: 'pessimistic_write' }`. À combiner avec des transactions courtes pour éviter les attentes et les deadlocks.
+[doc]: PostgreSQL — Row-level locks (EN) | https://www.postgresql.org/docs/current/explicit-locking.html#LOCKING-ROWS
+
+### Que faire d'une migration produite par `typeorm migration:generate` ?
+- [ ] La lancer directement en production, elle est fiable
+- [x] La relire : elle compare entités et schéma, et peut par exemple traduire un renommage en `DROP` + `ADD` (perte de données)
+- [ ] La supprimer, `synchronize` suffit
+- [ ] La convertir en `synchronize: true`
+> La génération est un point de départ. Un renommage de colonne, une conversion de type ou l'ajout d'une colonne `NOT NULL` sur une grosse table demandent souvent une migration écrite à la main (et parfois en plusieurs déploiements).
+[doc]: TypeORM — Migrations (EN) | https://typeorm.io/docs/advanced-topics/migrations
+
+### Avec Prisma, quelle est la différence entre `include` et `select` ?
+- [ ] Aucune
+- [x] `include` ajoute des relations à tous les champs scalaires ; `select` ne renvoie que les champs listés
+- [ ] `select` charge les relations en lazy loading
+- [ ] `include` exécute une requête SQL brute
+> `select` permet de ne jamais renvoyer `passwordHash` et réduit la taille des réponses. On peut imbriquer : `select: { id: true, orders: { select: { total: true } } }`. Le type retourné suit exactement la sélection.
+[doc]: Prisma — Select fields (EN) | https://www.prisma.io/docs/orm/prisma-client/queries/select-fields
+
+### Votre API tourne sur 10 instances, chacune avec un pool de 20 connexions. PostgreSQL accepte 100 connexions. Que se passe-t-il ?
+- [ ] Rien, le pool s'adapte automatiquement
+- [x] Jusqu'à 200 connexions sont demandées : des instances échouent à se connecter sous charge
+- [ ] PostgreSQL met les connexions en file d'attente sans limite
+- [ ] Les instances partagent le même pool
+> Le dimensionnement se fait **globalement** : `instances × taille du pool ≤ max_connections` (moins une marge pour migrations et admin). Au-delà, on ajoute un pooler (PgBouncer) ou on réduit le pool par instance.
+[doc]: Prisma — Connection pool (EN) | https://www.prisma.io/docs/orm/prisma-client/setup-and-configuration/databases-connections/connection-pool
+
+### Comment insérer un événement reçu deux fois (webhook rejoué) sans doublon ni erreur ?
+- [ ] `SELECT` puis `INSERT` si absent
+- [x] Une contrainte unique sur l'identifiant de l'événement et `INSERT … ON CONFLICT DO NOTHING` (ou `upsert`)
+- [ ] Un `try/catch` qui ignore toutes les erreurs SQL
+- [ ] Un verrou applicatif en mémoire
+> Le « vérifier puis insérer » est vulnérable aux requêtes concurrentes. `ON CONFLICT` délègue l'arbitrage à la base, de façon atomique. C'est la base de l'idempotence des consommateurs de webhooks et de messages.
+[doc]: PostgreSQL — INSERT … ON CONFLICT (EN) | https://www.postgresql.org/docs/current/sql-insert.html#SQL-ON-CONFLICT
+
+### Que fait `@DeleteDateColumn()` dans une entité TypeORM ?
+- [ ] Il supprime la ligne à une date donnée
+- [x] Il active le *soft delete* : `softRemove()` renseigne la date et les `find` excluent ces lignes par défaut
+- [ ] Il archive la ligne dans une autre table
+- [ ] Il enregistre la date de dernière modification
+> Le soft delete conserve l'historique, mais a un coût : les contraintes uniques doivent en tenir compte (index partiel `WHERE deleted_at IS NULL`) et les requêtes SQL brutes doivent filtrer elles-mêmes. Pour le RGPD, une suppression logique ne suffit pas toujours.
+[doc]: TypeORM — Special columns (EN) | https://typeorm.io/docs/entity/entities#special-columns

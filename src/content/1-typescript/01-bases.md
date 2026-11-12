@@ -286,3 +286,93 @@ callbacks.push(() => 42);
 - [ ] `never`
 > L'option `useUnknownInCatchVariables` (incluse dans `strict`) type la variable de `catch` en `unknown`, car JavaScript permet de lever n'importe quoi (`throw 'oops'`). Il faut donc vérifier `e instanceof Error` avant d'accéder à `e.message`.
 [doc]: Référence tsconfig — useUnknownInCatchVariables | https://www.typescriptlang.org/fr/tsconfig#useUnknownInCatchVariables
+
+### Ce code compile-t-il ?
+```ts
+const log: () => void = () => 42;
+```
+- [x] Oui : un type fonction qui retourne `void` accepte une fonction qui retourne une valeur, celle-ci sera ignorée
+- [ ] Non : `42` n'est pas assignable à `void`
+- [ ] Oui, et `log()` est de type `number`
+- [ ] Non, il faut écrire `() => undefined`
+> Pour un **type fonction** contextuel `() => void`, TS autorise une implémentation qui retourne quelque chose : c'est ce qui permet `arr.forEach((x) => list.push(x))` alors que `push` retourne un nombre. En revanche, une déclaration `function f(): void { return 42; }` est refusée. Et `log()` reste typé `void`.
+[doc]: Handbook — Retour de type void | https://www.typescriptlang.org/fr/docs/handbook/2/functions.html
+
+### Ce code compile-t-il ?
+```ts
+const pair: [string, number] = ['a', 1];
+pair.push(2);
+```
+- [x] Oui : `push` reste disponible sur un tuple et accepte `string | number`
+- [ ] Non : un tuple a une longueur fixe
+- [ ] Non : `push` n'existe pas sur un tuple
+- [ ] Oui, mais `pair` devient `[string, number, number]`
+> C'est un trou connu du système de types : un tuple est un tableau, et ses méthodes mutantes restent accessibles. Pour verrouiller la longueur, utilisez `readonly [string, number]` (ou `as const`), qui retire `push`, `pop`, `splice`…
+[doc]: Handbook — Tuples | https://www.typescriptlang.org/fr/docs/handbook/2/objects.html
+
+### Que se passe-t-il ici ?
+```ts
+function afficher(ids: readonly number[]) {
+  ids.push(4);
+}
+```
+- [ ] Ça compile, `readonly` ne concerne que la réassignation de `ids`
+- [x] Erreur : `push` n'existe pas sur `readonly number[]`
+- [ ] Erreur à l'exécution : le tableau est gelé
+- [ ] Ça compile, mais lève un warning
+> `readonly number[]` (ou `ReadonlyArray<number>`) retire les méthodes mutantes du **type**. Rien n'est gelé à l'exécution (`Object.freeze` le ferait). Annoter les paramètres en `readonly` documente que la fonction ne modifie pas ce qu'on lui passe, et accepte aussi bien un tableau mutable qu'immuable.
+[doc]: Handbook — ReadonlyArray | https://www.typescriptlang.org/fr/docs/handbook/2/objects.html
+
+### Quel est le type de `config.mode` ?
+```ts
+const config = { mode: 'dark' };
+```
+- [ ] `'dark'`
+- [x] `string`
+- [ ] `readonly 'dark'`
+- [ ] `any`
+> `const` empêche de réassigner `config`, pas de modifier ses propriétés : TS élargit donc `mode` en `string`. Pour garder le littéral : `{ mode: 'dark' } as const` ou une annotation `{ mode: 'dark' | 'light' }`. C'est une source fréquente d'erreurs « string n'est pas assignable à 'dark' | 'light' ».
+[doc]: Handbook — Inférence littérale | https://www.typescriptlang.org/fr/docs/handbook/2/everyday-types.html
+
+### Pourquoi l'appel `deplacer(direction)` ne compile-t-il pas ?
+```ts
+function deplacer(d: 'gauche' | 'droite') {}
+let direction = 'gauche';
+deplacer(direction);
+```
+- [ ] Parce que `direction` peut être `undefined`
+- [x] Parce que `let` élargit le type de `direction` en `string`
+- [ ] Parce qu'il faut écrire `deplacer(<'gauche'>direction)`
+- [ ] Il compile sans erreur
+> Avec `let`, la variable peut changer : TS infère `string`, qui n'est pas assignable à l'union de littéraux. Solutions : `const direction = 'gauche'`, ou annoter `let direction: 'gauche' | 'droite' = 'gauche'`.
+[doc]: Handbook — Types littéraux | https://www.typescriptlang.org/fr/docs/handbook/2/everyday-types.html
+
+### Que répond le compilateur à `const n = 'hello' as number;` ?
+- [ ] Rien, `as` force toujours le type
+- [x] Une erreur : la conversion de `string` vers `number` est probablement une erreur
+- [ ] Il convertit la chaîne en nombre à l'exécution
+- [ ] Il infère `NaN`
+> Une assertion `as` n'est acceptée que si l'un des deux types est assignable à l'autre. Sinon il faut passer explicitement par `as unknown as number` — ce qui doit alerter en revue de code. Et `as` ne fait **aucune conversion** à l'exécution.
+[doc]: Handbook — Type assertions | https://www.typescriptlang.org/fr/docs/handbook/2/everyday-types.html
+
+### Quel est le type de `ville` ?
+```ts
+interface User { address?: { city: string } }
+declare const user: User | undefined;
+const ville = user?.address?.city;
+```
+- [ ] `string`
+- [x] `string | undefined`
+- [ ] `string | null | undefined`
+- [ ] `unknown`
+> Le chaînage optionnel `?.` court-circuite et produit `undefined` dès qu'un maillon est `null` ou `undefined`. Le type résultant ajoute donc `undefined` (et jamais `null`). On le combine souvent avec `??` pour fournir une valeur par défaut.
+[doc]: MDN — Chaînage optionnel | https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Operators/Optional_chaining
+
+### Quelles valeurs sont assignables au type `object` (minuscule) ? (plusieurs réponses)
+- [x] `{ a: 1 }`
+- [x] `[1, 2, 3]`
+- [x] `() => {}`
+- [ ] `'texte'`
+- [ ] `null`
+> `object` désigne toute valeur **non primitive** : objets, tableaux, fonctions. Il exclut `string`, `number`, `boolean`, `bigint`, `symbol`, `null` et `undefined`. À ne pas confondre avec `{}` (tout sauf `null`/`undefined`) ni avec `Object` (à éviter).
+[doc]: Handbook — object | https://www.typescriptlang.org/fr/docs/handbook/2/functions.html
