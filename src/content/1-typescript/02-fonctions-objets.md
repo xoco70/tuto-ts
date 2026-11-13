@@ -122,6 +122,130 @@ Attention : `function f({ nom: string })` **renomme** `nom` en une variable `str
 
 <!-- QUIZ -->
 
+### Quelle signature déclare une fonction qui prend deux nombres et renvoie un nombre ?
+- [ ] `function somme(a, b): number`
+- [x] `function somme(a: number, b: number): number`
+- [ ] `function somme(number a, number b): number`
+- [ ] `function somme(a: number, b: number) => number`
+> Chaque paramètre s'annote avec `: type`, et le type de retour se place après la parenthèse fermante. Sans annotation, `a` et `b` seraient implicitement `any`, ce que `strict` (via `noImplicitAny`) refuse. La flèche `=>` sert pour les **types** fonction, pas dans une déclaration `function`.
+[doc]: Handbook — Fonctions | https://www.typescriptlang.org/fr/docs/handbook/2/functions.html
+[niveau]: facile
+
+### Quel type de retour TypeScript infère-t-il pour `double` ?
+```ts
+function double(n: number) {
+  return n * 2;
+}
+```
+- [x] `number`
+- [ ] `any`
+- [ ] `void`
+- [ ] Aucun : il faut obligatoirement l'annoter
+> TS infère le type de retour à partir des `return`. L'annotation n'est donc pas obligatoire ; le cours recommande de l'écrire surtout sur les fonctions **exportées**, pour figer le contrat public.
+[doc]: Handbook — Annotations de type de retour | https://www.typescriptlang.org/fr/docs/handbook/2/everyday-types.html
+[niveau]: facile
+
+### Que répond le compilateur à l'appel `saluer()` ?
+```ts
+function saluer(nom: string) {
+  return `Bonjour ${nom}`;
+}
+saluer();
+```
+- [ ] Rien : en JavaScript, un argument manquant vaut `undefined`
+- [x] Une erreur : `Expected 1 arguments, but got 0`
+- [ ] Un simple avertissement
+- [ ] Une erreur : il manque le type de retour
+> Contrairement à JavaScript, TypeScript vérifie le **nombre** d'arguments : un paramètre est obligatoire, sauf s'il est marqué `?` ou a une valeur par défaut. Pour rendre `nom` facultatif : `saluer(nom?: string)` ou `saluer(nom = 'toi')`.
+[doc]: Handbook — Paramètres optionnels | https://www.typescriptlang.org/fr/docs/handbook/2/functions.html
+[niveau]: facile
+
+### Quel est le type de `niveau` dans le corps de la fonction ?
+```ts
+function log(message: string, niveau?: 'info' | 'warn') {
+  niveau;
+}
+```
+- [ ] `'info' | 'warn'`
+- [x] `'info' | 'warn' | undefined`
+- [ ] `string`
+- [ ] `'info' | 'warn' | null`
+> Un paramètre optionnel (`?`) peut ne pas être fourni : il vaut alors `undefined`, que TS ajoute à son type. Il faut donc gérer ce cas (`niveau ?? 'info'`), ou utiliser une valeur par défaut (`niveau: 'info' | 'warn' = 'info'`) : dans le corps, le type est alors `'info' | 'warn'`.
+[doc]: Handbook — Paramètres optionnels | https://www.typescriptlang.org/fr/docs/handbook/2/functions.html
+[niveau]: facile
+
+### Quels appels de `multiplier` compilent ? (plusieurs réponses)
+```ts
+const multiplier = (a: number, b = 2) => a * b;
+```
+- [x] `multiplier(3)`
+- [x] `multiplier(3, 4)`
+- [ ] `multiplier()`
+- [ ] `multiplier(3, '4')`
+> `b = 2` rend `b` optionnel **et** lui fait inférer le type `number` à partir de la valeur par défaut. `a` reste obligatoire, et `'4'` n'est pas un `number` : TS ne fait aucune conversion.
+[doc]: Handbook — Paramètres optionnels | https://www.typescriptlang.org/fr/docs/handbook/2/functions.html
+[niveau]: facile
+
+### Comment typer une fonction qui accepte un nombre variable de prix ?
+- [ ] `function total(...prix: number) {}`
+- [x] `function total(...prix: number[]) {}`
+- [ ] `function total(prix...: number[]) {}`
+- [ ] `function total(...prix[]: number) {}`
+> Un paramètre rest regroupe les arguments dans un **tableau** : son type doit donc être un tableau (`number[]`) ou un tuple. Dans le corps, `prix` est un `number[]` classique, et l'appel s'écrit `total(10, 20, 30)`.
+[doc]: Handbook — Paramètres rest | https://www.typescriptlang.org/fr/docs/handbook/2/functions.html
+[niveau]: facile
+
+### Quelle fonction peut-on affecter à une variable de type `Comparateur` ?
+```ts
+type Comparateur = (a: number, b: number) => number;
+```
+- [x] `(x, y) => x - y`
+- [ ] `(x: string, y: string) => x.localeCompare(y)`
+- [ ] `(a: number, b: number) => a > b`
+- [ ] `(a: number, b: number) => String(a - b)`
+> Les noms des paramètres n'ont pas d'importance, seuls les types comptent. Dans `const c: Comparateur = (x, y) => x - y`, TS déduit les types de `x` et `y` du contexte (*typage contextuel*) : ce sont des `number`, et le retour est bien un `number`. Les autres propositions attendent des chaînes, ou renvoient un `boolean` ou une `string`.
+[doc]: Handbook — Function type expressions | https://www.typescriptlang.org/fr/docs/handbook/2/functions.html
+[niveau]: facile
+
+### Que signale TypeScript à la dernière ligne ?
+```ts
+interface User { readonly id: string; nom: string }
+const u: User = { id: 'u1', nom: 'Ada' };
+u.id = 'u2';
+```
+- [ ] Rien : `readonly` ne concerne que les classes
+- [x] Une erreur : `Cannot assign to 'id' because it is a read-only property`
+- [ ] Rien, mais une erreur à l'exécution car l'objet est gelé
+- [ ] Une erreur, car `u` est une `const`
+> `readonly` interdit de réassigner la propriété ; `nom`, elle, reste modifiable (et `const` n'empêche que de réassigner `u` lui-même). Comme tous les types, c'est un contrôle **statique** : rien n'est gelé à l'exécution (pour cela, il faut `Object.freeze`).
+[doc]: Handbook — readonly | https://www.typescriptlang.org/fr/docs/handbook/2/objects.html
+[niveau]: facile
+
+### Quelles propriétés un objet de type `Chien` doit-il avoir ?
+```ts
+interface Animal { nom: string }
+interface Chien extends Animal { aboie(): void }
+```
+- [ ] Seulement `aboie`
+- [ ] Seulement `nom`
+- [x] `nom` et `aboie`
+- [ ] Aucune : `extends` ne fait qu'autoriser des propriétés
+> `extends` **hérite** des membres de l'interface parente : un `Chien` doit avoir `nom` (venu d'`Animal`) et `aboie`. Un `Chien` est donc utilisable partout où un `Animal` est attendu.
+[doc]: Handbook — Étendre des types | https://www.typescriptlang.org/fr/docs/handbook/2/objects.html
+[niveau]: facile
+
+### Avec des alias `type`, comment obtenir l'équivalent de `interface Chien extends Animal` ?
+```ts
+type AnimalT = { nom: string };
+```
+- [x] `type ChienT = AnimalT & { aboie(): void };`
+- [ ] `type ChienT = AnimalT | { aboie(): void };`
+- [ ] `type ChienT extends AnimalT { aboie(): void }`
+- [ ] `type ChienT = AnimalT + { aboie(): void };`
+> L'**intersection** `&` combine les propriétés des deux types : un `ChienT` a `nom` **et** `aboie`. L'union `|` signifierait « l'un **ou** l'autre ». `extends` ne s'écrit pas sur un alias `type`, et `+` n'est pas un opérateur de type.
+[doc]: Handbook — Intersection types | https://www.typescriptlang.org/fr/docs/handbook/2/objects.html
+[niveau]: facile
+
 ### Quelle construction est impossible avec `interface` mais possible avec `type` ?
 - [ ] Décrire la forme d'un objet
 - [ ] Étendre un autre type
@@ -129,6 +253,7 @@ Attention : `function f({ nom: string })` **renomme** `nom` en une variable `str
 - [ ] Déclarer une méthode
 > Les unions, tuples, alias de primitifs, types mappés et conditionnels ne peuvent s'exprimer qu'avec `type`. Une `interface` décrit toujours une forme d'objet (ou de fonction).
 [doc]: Handbook — Différences entre type et interface | https://www.typescriptlang.org/fr/docs/handbook/2/everyday-types.html
+[niveau]: facile
 
 ### Que se passe-t-il si on déclare deux fois la même `interface` dans le même scope ?
 ```ts
@@ -154,6 +279,7 @@ type C = A & B;
 - [ ] Erreur de compilation immédiate
 > L'intersection exige que `id` soit à la fois `string` **et** `number` : aucune valeur ne satisfait cela, donc `never`. Pas d'erreur à la déclaration, mais impossible de construire un `C`. Avec `interface B extends A`, TS signalerait l'incompatibilité dès la déclaration.
 [doc]: Handbook — Intersection types | https://www.typescriptlang.org/fr/docs/handbook/2/objects.html
+[niveau]: avancé
 
 ### Quel type est retourné par `parse(42)` ?
 ```ts
@@ -203,6 +329,7 @@ u.tags.push('admin');
 - [ ] `function f(a: number, ...rest: number[])`
 > Un paramètre obligatoire ne peut pas suivre un paramètre optionnel (`?`). Les paramètres avec valeur par défaut, eux, peuvent techniquement être placés avant (on passe alors `undefined` explicitement), mais c'est rarement une bonne idée.
 [doc]: Handbook — Paramètres optionnels | https://www.typescriptlang.org/fr/docs/handbook/2/functions.html
+[niveau]: facile
 
 ### À quoi sert le paramètre `this` dans cette signature ?
 ```ts
@@ -222,6 +349,7 @@ function onClick(this: HTMLButtonElement, e: MouseEvent) {}
 - [ ] `Map<number>`
 > `Record<string, number>` équivaut à `{ [key: string]: number }`. `{ string: number }` décrit un objet avec **une** propriété littéralement nommée `string`. `Map` est une structure différente (avec `get`/`set`) et prend deux paramètres de type.
 [doc]: Handbook — Signatures d'index | https://www.typescriptlang.org/fr/docs/handbook/2/objects.html
+[niveau]: facile
 
 ### Pourquoi annoter explicitement le type de retour des fonctions exportées ?
 - [ ] C'est obligatoire en mode strict
@@ -230,6 +358,7 @@ function onClick(this: HTMLButtonElement, e: MouseEvent) {}
 - [ ] Sinon le type de retour est `any`
 > L'inférence est fiable, mais sur une API publique, un `return` oublié ou modifié changerait le type inféré et casserait les appelants loin de la cause. L'annotation sert aussi de documentation et accélère le type-checking sur les gros projets (`isolatedDeclarations`).
 [doc]: Handbook — Annotations de type de retour | https://www.typescriptlang.org/fr/docs/handbook/2/everyday-types.html
+[niveau]: facile
 
 ### Quelle syntaxe décrit un type « fonction qui prend une chaîne et ne retourne rien » ?
 - [ ] `type Fn = function(string): void`
@@ -238,6 +367,7 @@ function onClick(this: HTMLButtonElement, e: MouseEvent) {}
 - [ ] `type Fn = (string) => void`
 > Le nom du paramètre est **obligatoire** dans un type fonction. Piège : `(string) => void` est valide mais déclare un paramètre *nommé* `string` de type `any` (erreur avec `noImplicitAny`).
 [doc]: Handbook — Function type expressions | https://www.typescriptlang.org/fr/docs/handbook/2/functions.html
+[niveau]: facile
 
 ### Quelle est la différence entre `extends` sur une interface et `&` sur un type ?
 - [ ] Aucune, c'est purement syntaxique
@@ -246,6 +376,7 @@ function onClick(this: HTMLButtonElement, e: MouseEvent) {}
 - [ ] `extends` copie les valeurs à l'exécution
 > `interface B extends A` vérifie que `B` est compatible avec `A` et produit une erreur claire en cas de conflit. Une intersection combine sans vérifier, et un conflit donne `never`. Les interfaces sont aussi mises en cache par le compilateur, ce qui est plus performant sur les grosses bases.
 [doc]: Handbook — Étendre des types | https://www.typescriptlang.org/fr/docs/handbook/2/objects.html
+[niveau]: avancé
 
 ### Que décrit cette interface ?
 ```ts
@@ -257,6 +388,7 @@ interface Factory { new (nom: string): Service }
 - [ ] Une erreur de syntaxe
 > Une *construct signature* décrit un constructeur. C'est utile pour typer des fabriques ou des paramètres comme `Type<T>` dans NestJS (`new (...args: any[]) => T`).
 [doc]: Handbook — Construct signatures | https://www.typescriptlang.org/fr/docs/handbook/2/functions.html
+[niveau]: avancé
 
 ### Comment ajouter une propriété `user` à l'objet `Request` d'Express, de façon typée, dans tout le projet ?
 - [ ] Modifier le fichier dans `node_modules/@types/express`
@@ -265,6 +397,7 @@ interface Factory { new (nom: string): Service }
 - [ ] Caster `req as any` partout
 > L'augmentation de module (*module augmentation*) repose sur la fusion des interfaces. C'est exactement ce que fait `@types/passport` pour ajouter `req.user`.
 [doc]: Module augmentation (EN) | https://www.typescriptlang.org/docs/handbook/declaration-merging.html#module-augmentation
+[niveau]: avancé
 
 ### Quelles affirmations sur les paramètres sont vraies ? (plusieurs réponses)
 - [x] Un paramètre avec valeur par défaut est optionnel pour l'appelant
@@ -273,6 +406,7 @@ interface Factory { new (nom: string): Service }
 - [ ] On peut avoir plusieurs paramètres rest
 > Un paramètre non fourni vaut `undefined` (pas `null`). Il ne peut y avoir qu'un seul paramètre rest, en dernière position.
 [doc]: Handbook — Paramètres rest | https://www.typescriptlang.org/fr/docs/handbook/2/functions.html
+[niveau]: facile
 
 ### Ce code compile-t-il ?
 ```ts
@@ -290,6 +424,7 @@ formater(v);
 - [ ] Non, une surcharge doit avoir un corps
 > La signature d'**implémentation** n'est pas visible de l'extérieur : seules les surcharges le sont, et TS en cherche une seule qui accepte l'argument. Ici, une simple signature `(x: string | number): string` serait plus simple et plus utile — préférez une union aux surcharges quand c'est possible.
 [doc]: Handbook — Surcharges de fonctions | https://www.typescriptlang.org/fr/docs/handbook/2/functions.html
+[niveau]: avancé
 
 ### Quelle est la différence entre `{ a?: string }` et `{ a: string | undefined }` ?
 - [ ] Aucune
@@ -298,6 +433,7 @@ formater(v);
 - [ ] La seconde est refusée en mode `strict`
 > `{}` est assignable à `{ a?: string }` mais pas à `{ a: string | undefined }`, où la clé est obligatoire. L'option `exactOptionalPropertyTypes` va plus loin : elle interdit d'écrire explicitement `a: undefined` sur une propriété `a?: string`.
 [doc]: tsconfig — exactOptionalPropertyTypes | https://www.typescriptlang.org/fr/tsconfig#exactOptionalPropertyTypes
+[niveau]: avancé
 
 ### Ce code compile-t-il ?
 ```ts
@@ -325,6 +461,7 @@ const angle = Math.atan2(...args);
 - [ ] Il compile sans erreur
 > Un spread doit cibler un paramètre rest ou avoir un **type tuple**. `number[]` peut avoir 0 ou 50 éléments. Avec `const args = [8, 5] as const`, le type devient `readonly [8, 5]` et l'appel compile.
 [doc]: Handbook — Rest arguments | https://www.typescriptlang.org/fr/docs/handbook/2/functions.html
+[niveau]: avancé
 
 ### Pourquoi cette interface est-elle refusée ?
 ```ts
@@ -339,6 +476,7 @@ interface Dictionnaire {
 - [ ] La clé d'une signature d'index doit être `number`
 > Avec `[cle: string]: number`, **toute** clé chaîne doit renvoyer un `number`, y compris `nom`. Solution : élargir la signature (`number | string`) ou séparer les données (`{ nom: string; valeurs: Record<string, number> }`).
 [doc]: Handbook — Index signatures | https://www.typescriptlang.org/fr/docs/handbook/2/objects.html
+[niveau]: avancé
 
 ### Que fait réellement ce paramètre ?
 ```ts
@@ -387,6 +525,7 @@ for (let j = 0; j < 3; j++) {
 - [ ] `3 3 3` puis `3 3 3`
 > Les callbacks s'exécutent **après** la fin des boucles. Avec `var`, il n'existe qu'une seule variable `i` pour toute la fonction : les trois closures lisent sa valeur finale, `3`. Avec `let`, chaque itération crée une **nouvelle liaison** `j`, et chaque closure capture la sienne.
 [doc]: MDN — Closures | https://developer.mozilla.org/fr/docs/Web/JavaScript/Guide/Closures
+[niveau]: facile
 
 ### Dans un module ES (fichier avec `import`/`export`), que se passe-t-il ?
 ```ts
@@ -435,6 +574,7 @@ console.log(typeof dire.bind(lydia, 21));
 > `call` (et `apply`, qui prend un tableau d'arguments) **appelle immédiatement** la fonction avec le `this` donné. `bind` ne l'appelle pas : il renvoie une **nouvelle fonction** dont le `this` (et ici le premier argument) est fixé. Le paramètre `this:` de la signature n'existe que pour TS, qui vérifie ainsi que chaque appel fournit le bon contexte.
 [doc]: MDN — Function.prototype.call | https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Global_Objects/Function/call
 [doc]: MDN — Function.prototype.bind | https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Global_Objects/Function/bind
+[niveau]: facile
 
 ### Que renvoie cette expression ?
 ```ts
@@ -446,6 +586,7 @@ console.log(typeof dire.bind(lydia, 21));
 - [ ] `[1, 2, 6]`
 > La valeur initiale `[1, 2]` est le premier `acc`. Tour 1 : `[1, 2].concat([0, 1])` donne `[1, 2, 0, 1]`. Tour 2 : on y concatène `[2, 3]`. Pour aplatir un tableau, `arr.flat()` est plus lisible.
 [doc]: MDN — Array.prototype.reduce | https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Global_Objects/Array/reduce
+[niveau]: facile
 
 ### Qu'affiche ce code ?
 ```ts
@@ -465,6 +606,7 @@ try {
 - [ ] `SyntaxError` : on ne peut lancer que des objets `Error`
 > On peut lancer **n'importe quelle valeur** : une chaîne, un nombre, un objet… C'est pour cela que TS type `e` en `unknown` dans un `catch`. Lancer une chaîne est une mauvaise pratique : on perd la pile d'appels (*stack trace*) et `e instanceof Error` est faux. Il vaut mieux toujours faire `throw new Error('…')`, ou utiliser une sous-classe d'`Error`.
 [doc]: MDN — throw | https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Statements/throw
+[niveau]: facile
 
 ### Qu'affiche ce code ?
 ```ts

@@ -105,6 +105,138 @@ const results: PromiseSettledResult<User>[] = await Promise.allSettled(ps);
 
 <!-- QUIZ -->
 
+### Comment annoter le type de retour d'une fonction `async` qui renvoie un `User` ?
+```ts
+async function chargerUser(id: string): ??? {
+  const res = await fetch(`/api/users/${id}`);
+  return res.json();
+}
+```
+- [ ] `User`
+- [x] `Promise<User>`
+- [ ] `Async<User>`
+- [ ] `User | Promise`
+> Une fonction `async` renvoie **toujours** une Promise : on annote donc `Promise<User>`, où `User` est le type de la valeur obtenue après `await`. L'appelant écrit `const u = await chargerUser('42')` et récupère un `User`.
+[doc]: MDN — async function | https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Statements/async_function
+[niveau]: facile
+
+### Ce code compile-t-il ?
+```ts
+async function compter(): number {
+  return 1;
+}
+```
+- [ ] Oui, TS enveloppe le type automatiquement
+- [x] Non : le type de retour d'une fonction `async` doit être `Promise<…>`, ici `Promise<number>`
+- [ ] Oui, mais uniquement sans `strict`
+- [ ] Non : une fonction `async` ne peut pas retourner de nombre
+> TS refuse une annotation qui ne serait pas une Promise (erreur TS1064) : l'annotation décrit ce que l'appelant reçoit réellement, c'est-à-dire une Promise. On peut aussi omettre l'annotation : TS infère `Promise<number>`.
+[doc]: MDN — async function | https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Statements/async_function
+[niveau]: facile
+
+### Quel est le type de `n` ?
+```ts
+async function main() {
+  const n = await Promise.resolve(42);
+}
+```
+- [ ] `Promise<number>`
+- [x] `number`
+- [ ] `any`
+- [ ] `Promise<42>`
+> `await` « déballe » la Promise : sur une `Promise<number>`, on obtient un `number`. C'est la même opération que le type utilitaire `Awaited<T>` réalise au niveau des types.
+[doc]: MDN — await | https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Operators/await
+[niveau]: facile
+
+### Que vérifie le paramètre de type `<number>` dans ce code ?
+```ts
+const p = new Promise<number>((resolve) => {
+  setTimeout(() => resolve(42), 100);
+});
+```
+- [ ] Le délai du `setTimeout`
+- [x] Le type de la valeur passée à `resolve` : `resolve('42')` serait une erreur
+- [ ] Le type de l'erreur passée à `reject`
+- [ ] Rien, il est purement décoratif
+> `Promise<T>` est générique : `T` est le type de la valeur de résolution. TS contrôle donc les appels à `resolve` et type la suite (`p.then((v) => …)` reçoit un `number`). Le motif de `reject`, lui, n'est pas typé.
+[doc]: MDN — Promise | https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Global_Objects/Promise
+[niveau]: facile
+
+### Quel type de retour donner à une fonction `async` qui ne renvoie rien ?
+```ts
+async function enregistrer(user: User) {
+  await db.save(user);
+}
+```
+- [ ] `void`
+- [x] `Promise<void>`
+- [ ] `Promise<undefined | null>`
+- [ ] `never`
+> Même sans `return`, une fonction `async` renvoie une Promise, résolue sans valeur : son type est `Promise<void>`. L'annoter `void` serait refusé, comme tout type qui n'est pas une Promise.
+[doc]: MDN — async function | https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Statements/async_function
+[niveau]: facile
+
+### Que vaut le type `R` ?
+```ts
+type R = Awaited<Promise<string>>;
+```
+- [ ] `Promise<string>`
+- [x] `string`
+- [ ] `unknown`
+- [ ] `void`
+> `Awaited<T>` donne le type obtenu après un `await` sur `T`. Combiné à `ReturnType`, il permet de récupérer le résultat d'une fonction async sans le réécrire : `Awaited<ReturnType<typeof chargerUser>>` donne `User`.
+[doc]: Utility types — Awaited (EN) | https://www.typescriptlang.org/docs/handbook/utility-types.html#awaitedtype
+[niveau]: facile
+
+### Quel est le type de `resultat` ?
+```ts
+declare function getUser(): Promise<User>;
+declare function getPosts(): Promise<Post[]>;
+const resultat = await Promise.all([getUser(), getPosts()]);
+```
+- [ ] `(User | Post[])[]`
+- [x] `[User, Post[]]`
+- [ ] `Promise<[User, Post[]]>`
+- [ ] `any[]`
+> Sur un tableau littéral, `Promise.all` est typé comme un **tuple** : chaque position garde son type, dans l'ordre. On peut donc déstructurer sans perdre d'information : `const [user, posts] = await Promise.all([…])`.
+[doc]: MDN — Promise.all | https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Global_Objects/Promise/all
+[niveau]: facile
+
+### Avec `strict`, comment lire proprement le message d'erreur ici ?
+```ts
+try {
+  await traiter();
+} catch (e) {
+  console.error(/* ??? */);
+}
+```
+- [ ] `e.message`, `e` est typé `Error`
+- [x] `e instanceof Error ? e.message : String(e)`
+- [ ] `(e as string).message`
+- [ ] `e!.message`
+> En mode strict, `e` est typé `unknown`, car on peut rejeter n'importe quoi (une chaîne, un objet…). Il faut donc l'**affiner** avant d'accéder à `.message`. C'est valable aussi bien pour une erreur synchrone que pour une Promise rejetée attendue avec `await`.
+[doc]: Référence tsconfig — useUnknownInCatchVariables | https://www.typescriptlang.org/fr/tsconfig#useUnknownInCatchVariables
+[niveau]: facile
+
+### Quels sont les états possibles d'une Promise ? (plusieurs réponses)
+- [x] `pending` (en attente)
+- [x] `fulfilled` (tenue)
+- [x] `rejected` (rejetée)
+- [ ] `cancelled` (annulée)
+- [ ] `paused` (en pause)
+> Une Promise part de `pending` puis devient **définitivement** `fulfilled` ou `rejected` (on dit alors qu'elle est *settled*). Il n'existe pas d'état « annulée » : pour interrompre une opération, on passe par un `AbortSignal`.
+[doc]: MDN — Promise | https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Global_Objects/Promise
+[niveau]: facile
+
+### Que devient un `throw` à l'intérieur d'une fonction `async` ?
+- [ ] Il arrête immédiatement le processus
+- [x] Il rejette la Promise renvoyée par la fonction
+- [ ] Il est ignoré
+- [ ] Il est transformé en `undefined`
+> Dans une fonction `async`, `throw x` équivaut à renvoyer une Promise rejetée avec `x`. L'appelant le récupère avec `try { await f() } catch` ou avec `.catch()`.
+[doc]: MDN — async function | https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Statements/async_function
+[niveau]: facile
+
 ### Quel est l'ordre d'affichage ?
 ```ts
 console.log('A');
@@ -126,6 +258,7 @@ console.log('D');
 - [ ] Une erreur : il faut `return Promise.resolve(42)`
 > Une fonction `async` enveloppe toujours sa valeur de retour dans une Promise. Son type de retour doit donc être `Promise<T>`.
 [doc]: MDN — async function | https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Statements/async_function
+[niveau]: facile
 
 ### Combien de temps prend ce code, si `getA` prend 100 ms et `getB` 200 ms ?
 ```ts
@@ -138,6 +271,7 @@ const b = await getB();
 - [ ] 0 ms
 > Les deux `await` sont **séquentiels** : `getB` n'est appelé qu'après la fin de `getA`. Pour paralléliser des appels indépendants : `await Promise.all([getA(), getB()])` → ~200 ms.
 [doc]: MDN — Promise.all | https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Global_Objects/Promise/all
+[niveau]: facile
 
 ### Que se passe-t-il ici ?
 ```ts
@@ -160,6 +294,7 @@ async function envoyerTous(users: User[]) {
 - [ ] `Promise.any`
 > `allSettled` attend que toutes les promesses soient réglées et renvoie `{ status: 'fulfilled', value }` ou `{ status: 'rejected', reason }` pour chacune. `all` rejette dès le premier échec.
 [doc]: MDN — Promise.allSettled | https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Global_Objects/Promise/allSettled
+[niveau]: facile
 
 ### Avec `Promise.all([a(), b(), c()])`, si `b()` rejette immédiatement, que deviennent `a()` et `c()` ?
 - [ ] Elles sont annulées automatiquement
@@ -193,6 +328,7 @@ async function f() {
 - [ ] Pour des raisons de performance
 > Dans un `try/catch`, `return await` est indispensable. Hors `try`, `return promise` et `return await promise` sont équivalents (la règle ESLint `return-await` en mode `in-try-catch` formalise cela).
 [doc]: MDN — await | https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Operators/await
+[niveau]: avancé
 
 ### Que se passe-t-il par défaut (Node ≥ 15) quand une Promise est rejetée sans handler ?
 - [ ] Rien
@@ -209,6 +345,7 @@ async function f() {
 - [ ] Le calcul est interrompu après 1 s
 > Le JS s'exécute sur un seul thread : un calcul synchrone monopolise l'event loop. Solutions : `worker_threads`, file de jobs (BullMQ) traitée par des workers, ou découpage avec `setImmediate`.
 [doc]: Node.js — Don't block the event loop (EN) | https://nodejs.org/en/learn/asynchronous-work/dont-block-the-event-loop
+[niveau]: facile
 
 ### Comment annuler un `fetch` qui dépasse 5 secondes ?
 - [ ] `promise.cancel()`
@@ -230,6 +367,7 @@ process.nextTick(() => console.log('nextTick'));
 - [ ] nextTick, timeout, promise
 > Dans Node, la file `process.nextTick` est vidée **avant** les microtâches des Promises, elles-mêmes avant les macrotâches comme `setTimeout`.
 [doc]: Node.js — process.nextTick() (EN) | https://nodejs.org/en/learn/asynchronous-work/understanding-processnexttick
+[niveau]: avancé
 
 ### Comment traiter 1 000 éléments avec au maximum 5 appels réseau simultanés ?
 - [ ] `await Promise.all(items.map(appel))`
@@ -246,6 +384,7 @@ process.nextTick(() => console.log('nextTick'));
 - [ ] Une Promise peut être résolue plusieurs fois avec des valeurs différentes
 > L'*executor* s'exécute immédiatement, de façon synchrone. En revanche, les callbacks `then/catch` sont **toujours** asynchrones (microtâche), même sur une promesse déjà résolue. Les appels suivants à `resolve`/`reject` sont ignorés.
 [doc]: MDN — Promise | https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Global_Objects/Promise
+[niveau]: avancé
 
 ### Quel est l'ordre d'affichage ?
 ```ts
@@ -263,6 +402,7 @@ console.log('C');
 - [ ] A, C (B n'est jamais affiché)
 > Le corps d'une fonction `async` s'exécute **de façon synchrone** jusqu'au premier `await`. La suite est planifiée en microtâche, exécutée une fois la pile courante vidée — donc après `console.log('C')`.
 [doc]: MDN — async function | https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Statements/async_function
+[niveau]: avancé
 
 ### Le message « attrapé » est-il affiché ?
 ```ts
@@ -297,6 +437,7 @@ try {
 - [ ] `await Promise.all(flux)`
 > `for await...of` itère sur un **itérable asynchrone** en attendant chaque valeur. Les streams Node (`Readable`) sont itérables de cette façon, ce qui permet de traiter un gros fichier sans tout charger en mémoire.
 [doc]: MDN — for await...of | https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Statements/for-await...of
+[niveau]: facile
 
 ### Où le `await` de haut niveau (*top-level await*) est-il autorisé ?
 - [ ] Partout depuis ES2017
@@ -305,6 +446,7 @@ try {
 - [ ] Nulle part, il faut toujours une fonction `async`
 > Le top-level await n'existe que dans les **modules ES** : il suspend l'évaluation du module (et de ceux qui l'importent). Côté TS, il faut `module` en `es2022`, `esnext`, `nodenext`… et un fichier traité comme ESM.
 [doc]: MDN — await | https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Operators/await
+[niveau]: avancé
 
 ### Quel est le type de `p` ?
 ```ts
@@ -316,6 +458,7 @@ const p = Promise.resolve(1).then((x) => Promise.resolve(x + 1));
 - [ ] `Promise<unknown>`
 > Une Promise retournée dans un `.then` est **aplatie** : on ne peut pas obtenir une Promise de Promise. C'est ce qui permet de chaîner des appels asynchrones. L'utilitaire `Awaited<T>` reproduit ce déballage récursif au niveau des types.
 [doc]: MDN — Utiliser les promesses (chaînage) | https://developer.mozilla.org/fr/docs/Web/JavaScript/Guide/Using_promises
+[niveau]: avancé
 
 ### Quelle valeur la Promise produit-elle ?
 ```ts
@@ -347,6 +490,7 @@ const id: number = setInterval(() => console.log('Hi'), 1000);
 > Dans le navigateur, `setInterval` renvoie un identifiant numérique. Dans Node, il renvoie un objet `Timeout` (avec `ref()`, `unref()`, `refresh()`…). Les deux s'annulent avec `clearInterval(id)`. `ReturnType<typeof setInterval>` donne le bon type quel que soit l'environnement, ce qui est utile pour du code partagé entre front et back.
 [doc]: MDN — setInterval | https://developer.mozilla.org/fr/docs/Web/API/Window/setInterval
 [doc]: Node.js — Timers (EN) | https://nodejs.org/api/timers.html
+[niveau]: avancé
 
 ### Qu'affiche ce code ?
 ```ts
@@ -377,3 +521,4 @@ Promise.race([p1, p2]).then((r) => console.log(r));
 - [ ] `un`, puis `deux`
 > `Promise.race` se règle comme la **première** promesse réglée (résolue ou rejetée) : ici `p2`, au bout de 100 ms. `then` ne s'exécute qu'une fois. `p1` continue de tourner mais son résultat est ignoré : `race` n'annule rien (il faut un `AbortController` pour cela). Les arguments après le délai de `setTimeout` sont passés au callback, d'où `res('deux')`.
 [doc]: MDN — Promise.race | https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Global_Objects/Promise/race
+[niveau]: facile

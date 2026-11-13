@@ -1,7 +1,16 @@
 import { useCallback, useEffect, useState } from 'react';
 import { findModule } from '../lib/content.ts';
 import { getProgress, isMastered, recordAnswer, useProgress } from '../lib/progress.ts';
-import { pickQuestions, shuffleOptions } from '../lib/quiz.ts';
+import {
+  byDifficulty,
+  DIFFICULTIES,
+  DIFFICULTY_LABELS,
+  difficultyLadder,
+  filterByDifficulty,
+  pickQuestions,
+  shuffleOptions,
+  type DifficultyMode,
+} from '../lib/quiz.ts';
 import type { Question } from '../lib/types.ts';
 import { InlineMarkdown, Markdown } from './Markdown.tsx';
 
@@ -9,6 +18,7 @@ interface QuizProps {
   pool: Question[];
   sizes: number[];
   showModule?: boolean;
+  defaultMode?: DifficultyMode;
   onFinished?: (scorePercent: number) => void;
 }
 
@@ -22,10 +32,11 @@ type Phase = 'setup' | 'running' | 'done';
 
 const sameSet = (a: number[], b: number[]) => a.length === b.length && a.every((value) => b.includes(value));
 
-export function Quiz({ pool, sizes, showModule = false, onFinished }: QuizProps) {
+export function Quiz({ pool, sizes, showModule = false, defaultMode = 'progressive', onFinished }: QuizProps) {
   const progress = useProgress();
   const [phase, setPhase] = useState<Phase>('setup');
-  const [size, setSize] = useState(Math.min(sizes[0], pool.length));
+  const [mode, setMode] = useState<DifficultyMode>(defaultMode);
+  const [size, setSize] = useState<number | 'all'>(sizes[0]);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<number[]>([]);
@@ -36,8 +47,12 @@ export function Quiz({ pool, sizes, showModule = false, onFinished }: QuizProps)
   const neverSeen = pool.filter((question) => !progress.questions[question.id]).length;
   const toReview = pool.filter((question) => progress.questions[question.id]?.lastCorrect === false).length;
 
+  const ladder = difficultyLadder(pool, progress.questions);
+  const drawPool = filterByDifficulty(pool, mode, progress.questions);
+  const drawSize = size === 'all' ? drawPool.length : Math.min(size, drawPool.length);
+
   const start = (list: Question[]) => {
-    setQuestions(list.map(shuffleOptions));
+    setQuestions(byDifficulty(list).map(shuffleOptions));
     setIndex(0);
     setSelected([]);
     setValidated(false);
@@ -45,7 +60,10 @@ export function Quiz({ pool, sizes, showModule = false, onFinished }: QuizProps)
     setPhase('running');
   };
 
-  const startDraw = () => start(pickQuestions(pool, size, getProgress().questions));
+  const startDraw = () => {
+    const stats = getProgress().questions;
+    start(pickQuestions(filterByDifficulty(pool, mode, stats), drawSize, stats));
+  };
 
   const current = questions[index];
   const isMulti = (current?.answers.length ?? 0) > 1;
@@ -117,7 +135,10 @@ export function Quiz({ pool, sizes, showModule = false, onFinished }: QuizProps)
   }
 
   if (phase === 'setup') {
-    const choices = [...new Set([...sizes.filter((value) => value < pool.length), pool.length])];
+    const levels = ladder.filter((status) => status.total > 0);
+    const sizeChoices = sizes.filter((value) => value < drawPool.length);
+    const nextLock = levels.find((status) => !status.unlocked);
+    const currentLevel = [...levels].reverse().find((status) => status.unlocked);
     return (
       <div className="card quiz-setup">
         <h3>Configurer le quiz</h3>
@@ -127,22 +148,74 @@ export function Quiz({ pool, sizes, showModule = false, onFinished }: QuizProps)
           <span><strong>{neverSeen}</strong> jamais vues</span>
           {toReview > 0 && <span className="warn"><strong>{toReview}</strong> à revoir</span>}
         </div>
-        <p className="muted">
-          Le tirage privilégie les questions jamais vues et celles ratées la dernière fois. Les propositions sont
-          mélangées à chaque passage.
-        </p>
+
+        <h4>Difficulté</h4>
         <div className="size-picker">
-          {choices.map((value) => (
+          <button className={`chip ${mode === 'progressive' ? 'active' : ''}`} onClick={() => setMode('progressive')}>
+            Progressive
+          </button>
+          {DIFFICULTIES.filter((level) => ladder[level - 1].total > 0).map((level) => (
+            <button
+              key={level}
+              className={`chip ${mode === level ? 'active' : ''}`}
+              onClick={() => setMode(level)}
+            >
+              {DIFFICULTY_LABELS[level]} ({ladder[level - 1].total})
+            </button>
+          ))}
+          <button className={`chip ${mode === 'all' ? 'active' : ''}`} onClick={() => setMode('all')}>
+            Toutes
+          </button>
+        </div>
+
+        {mode === 'progressive' && levels.length > 1 && (
+          <>
+            <ol className="ladder">
+              {levels.map((status) => {
+                const done = status.passed >= status.needed;
+                const state = !status.unlocked ? 'locked' : done ? 'done' : 'current';
+                return (
+                  <li key={status.level} className={state}>
+                    <span className={`level-badge level-${status.level}`}>
+                      {state === 'locked' ? '🔒' : done ? '✓' : '▶'} {DIFFICULTY_LABELS[status.level]}
+                    </span>
+                    <span className="muted">{status.passed} / {status.total} réussies</span>
+                  </li>
+                );
+              })}
+            </ol>
+            <p className="muted">
+              {nextLock && currentLevel
+                ? `Réussis encore ${currentLevel.needed - currentLevel.passed} question${currentLevel.needed - currentLevel.passed > 1 ? 's' : ''} de niveau ${DIFFICULTY_LABELS[currentLevel.level].toLowerCase()} pour débloquer le niveau ${DIFFICULTY_LABELS[nextLock.level].toLowerCase()}.`
+                : 'Tous les niveaux sont débloqués.'}
+            </p>
+          </>
+        )}
+
+        <p className="muted">
+          Chaque série va du plus facile au plus difficile. Le tirage privilégie les questions jamais vues et celles
+          ratées la dernière fois, et les propositions sont mélangées à chaque passage.
+        </p>
+
+        <h4>Nombre de questions</h4>
+        <div className="size-picker">
+          {sizeChoices.map((value) => (
             <button
               key={value}
               className={`chip ${size === value ? 'active' : ''}`}
               onClick={() => setSize(value)}
             >
-              {value === pool.length ? `Tout (${value})` : `${value} questions`}
+              {value} questions
             </button>
           ))}
+          <button
+            className={`chip ${drawSize === drawPool.length ? 'active' : ''}`}
+            onClick={() => setSize('all')}
+          >
+            Tout ({drawPool.length})
+          </button>
         </div>
-        <button className="btn primary" onClick={startDraw}>Démarrer</button>
+        <button className="btn primary" onClick={startDraw} disabled={drawSize === 0}>Démarrer</button>
       </div>
     );
   }
@@ -211,7 +284,10 @@ export function Quiz({ pool, sizes, showModule = false, onFinished }: QuizProps)
         <span>{results.filter((result) => result.isCorrect).length} ✓</span>
       </div>
       <div className="card question">
-        {module && <div className="tag">Étape {module.step} · {module.title}</div>}
+        <div className="question-tags">
+          <span className={`level-badge level-${current.difficulty}`}>{DIFFICULTY_LABELS[current.difficulty]}</span>
+          {module && <span className="tag">Étape {module.step} · {module.title}</span>}
+        </div>
         <Markdown text={current.body} />
         {isMulti && <p className="hint">Plusieurs réponses possibles ({current.answers.length} attendues)</p>}
         <div className="options">

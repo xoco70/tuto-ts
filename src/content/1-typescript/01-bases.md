@@ -113,6 +113,119 @@ Pour « un objet quelconque avec des clés » préfère `Record<string, unknown>
 
 <!-- QUIZ -->
 
+### Comment déclarer une variable `nom` de type chaîne avec une annotation explicite ?
+- [ ] `let nom<string> = 'Ada';`
+- [x] `let nom: string = 'Ada';`
+- [ ] `let string nom = 'Ada';`
+- [ ] `let nom = string('Ada');`
+> En TypeScript, l'annotation se place **après** le nom, précédée de `:`. Pour une variable locale, elle est le plus souvent inutile : `let nom = 'Ada'` suffit, car TS infère `string`. On réserve les annotations aux frontières (paramètres, types de retour publics).
+[doc]: Handbook — Annotations de type | https://www.typescriptlang.org/fr/docs/handbook/2/everyday-types.html
+[niveau]: facile
+
+### Quel type TypeScript infère-t-il pour `age` ?
+```ts
+let age = 36;
+```
+- [x] `number`
+- [ ] `36`
+- [ ] `any`
+- [ ] `int`
+> TS déduit le type de la valeur initiale. Comme une variable `let` peut être réassignée, il élargit le littéral `36` en `number` (avec `const`, il garderait `36`). Il n'existe pas de type `int` : tous les nombres sont des `number` (sauf les `bigint`).
+[doc]: Handbook — Inférence de type | https://www.typescriptlang.org/fr/docs/handbook/2/everyday-types.html
+[niveau]: facile
+
+### Que répond le compilateur à la deuxième ligne ?
+```ts
+let total: number = 10;
+total = 'dix';
+```
+- [ ] Rien : `total` devient une `string`
+- [x] Une erreur : `Type 'string' is not assignable to type 'number'`
+- [ ] Rien, mais une erreur survient à l'exécution
+- [ ] Il convertit `'dix'` en `NaN`
+> Le type d'une variable est fixé à sa déclaration : on ne peut plus y ranger une valeur d'un autre type. Ce message « *Type X is not assignable to type Y* » est l'erreur TypeScript la plus courante, apprends à le lire. Et TS ne convertit jamais rien : il se contente de signaler.
+[doc]: Handbook — Les bases | https://www.typescriptlang.org/fr/docs/handbook/2/basic-types.html
+[niveau]: facile
+
+### Quelles annotations décrivent un tableau de nombres de longueur quelconque ? (plusieurs réponses)
+- [x] `number[]`
+- [x] `Array<number>`
+- [ ] `[number]`
+- [ ] `array<number>`
+> `number[]` et `Array<number>` sont deux écritures strictement équivalentes. `[number]` est un **tuple** d'exactement un élément, et `array` (minuscule) n'existe pas.
+[doc]: Handbook — Tableaux | https://www.typescriptlang.org/fr/docs/handbook/2/everyday-types.html
+[niveau]: facile
+
+### Quel type décrit exactement une paire comme `['Ada', 36]` (un nom, puis un âge) ?
+- [ ] `string | number[]`
+- [ ] `(string | number)[]`
+- [x] `[string, number]`
+- [ ] `{ string, number }`
+> Un **tuple** fixe le nombre d'éléments et le type de chaque position : `paire[0]` est un `string`, `paire[1]` un `number`. `(string | number)[]` accepte la valeur mais perd l'information de position (`paire[0]` y serait `string | number`). Quant à `string | number[]`, il signifie « une chaîne ou un tableau de nombres ».
+[doc]: Handbook — Tuples | https://www.typescriptlang.org/fr/docs/handbook/2/objects.html
+[niveau]: facile
+
+### Pourquoi `crier` ne compile-t-elle pas ?
+```ts
+function crier(texte: unknown) {
+  return texte.toUpperCase();
+}
+```
+- [ ] Elle compile : `unknown` accepte n'importe quelle valeur
+- [x] `'texte' is of type 'unknown'` : il faut d'abord affiner son type
+- [ ] Il manque l'annotation du type de retour
+- [ ] `unknown` est interdit pour un paramètre
+> On peut **affecter** n'importe quoi à un `unknown`, mais on ne peut **rien en faire** tant qu'on n'a pas prouvé son type, par exemple avec `if (typeof texte === 'string')`. C'est exactement ce qui le rend plus sûr que `any`.
+[doc]: Handbook — unknown | https://www.typescriptlang.org/fr/docs/handbook/2/functions.html
+[niveau]: facile
+
+### Que se passe-t-il avec ce code ?
+```ts
+const valeur: any = 42;
+valeur.toUpperCase();
+```
+- [x] Il compile, mais plante à l'exécution (`TypeError`)
+- [ ] Il ne compile pas : `toUpperCase` n'existe pas sur `number`
+- [ ] Il ne compile pas : `any` est interdit en mode `strict`
+- [ ] Il compile et renvoie `'42'`
+> `any` **désactive** le contrôle de type : le compilateur accepte tout, et l'erreur n'apparaît qu'au runtime. `strict` n'interdit que les `any` **implicites** (`noImplicitAny`), pas ceux écrits explicitement. D'où la règle du cours : `any` est à bannir, `unknown` à préférer.
+[doc]: Handbook — any | https://www.typescriptlang.org/fr/docs/handbook/2/everyday-types.html
+[niveau]: facile
+
+### Avec `strict: true`, comment déclarer une variable qui contient un titre ou `null` ?
+- [ ] `let titre: string = null;`
+- [x] `let titre: string | null = null;`
+- [ ] `let titre: string? = null;`
+- [ ] `let titre: nullable string = null;`
+> Avec `strictNullChecks` (inclus dans `strict`), `null` n'est plus assignable à `string` : il faut l'autoriser explicitement avec une **union** `string | null`. TS t'obligera ensuite à vérifier `titre !== null` avant d'utiliser la chaîne. La syntaxe `string?` n'existe pas : le `?` s'utilise sur les propriétés et les paramètres.
+[doc]: Référence tsconfig — strict | https://www.typescriptlang.org/fr/tsconfig#strict
+[niveau]: facile
+
+### Ce littéral est-il un `User` valide ?
+```ts
+interface User { nom: string; email?: string }
+const u: User = { nom: 'Ada' };
+```
+- [x] Oui : `email` est optionnelle, elle peut être absente
+- [ ] Non : il manque `email`
+- [ ] Oui, et `u.email` vaut `''`
+- [ ] Non : il faut écrire `email: undefined`
+> Le `?` rend la propriété **optionnelle** : l'objet peut ne pas l'avoir. En lisant `u.email`, on obtient `undefined` (type `string | undefined`), jamais une valeur par défaut. `nom`, sans `?`, reste obligatoire.
+[doc]: Handbook — Propriétés optionnelles | https://www.typescriptlang.org/fr/docs/handbook/2/objects.html
+[niveau]: facile
+
+### Lequel de ces appels est refusé par le compilateur ?
+```ts
+function commander(taille: 'S' | 'M' | 'L') {}
+```
+- [ ] `commander('S')`
+- [ ] `commander('L')`
+- [x] `commander('XL')`
+- [ ] Aucun : ce sont tous des `string`
+> `'S' | 'M' | 'L'` est une union de **types littéraux** : seules ces trois chaînes exactes sont acceptées. C'est la façon idiomatique de typer un ensemble fini de valeurs en TypeScript.
+[doc]: Handbook — Types littéraux | https://www.typescriptlang.org/fr/docs/handbook/2/everyday-types.html
+[niveau]: facile
+
 ### Que reste-t-il des annotations de type dans le JavaScript généré par `tsc` ?
 - [ ] Elles sont transformées en vérifications à l'exécution
 - [x] Rien : elles sont effacées à la compilation
@@ -120,6 +233,7 @@ Pour « un objet quelconque avec des clés » préfère `Record<string, unknown>
 - [ ] Seules les interfaces sont conservées
 > TypeScript pratique l'**effacement des types** (*type erasure*). Le JS produit ne contient aucune information de type : c'est pour cela qu'on ne peut pas tester une interface à l'exécution et qu'il faut des classes (+ `class-validator`) ou des schémas (Zod) pour valider des données venant de l'extérieur.
 [doc]: Handbook — Les bases (types effacés) | https://www.typescriptlang.org/fr/docs/handbook/2/basic-types.html
+[niveau]: facile
 
 ### Ce code compile-t-il ?
 ```ts
@@ -156,6 +270,7 @@ const role = 'admin';
 - [ ] `String`
 > Une `const` ne peut pas être réassignée, donc TS conserve le **type littéral** `'admin'`. Avec `let role = 'admin'`, le type serait élargi (*widening*) en `string`.
 [doc]: Handbook — Types littéraux | https://www.typescriptlang.org/fr/docs/handbook/2/everyday-types.html
+[niveau]: facile
 
 ### Quel type faut-il préférer pour une valeur dont on ignore encore la forme (ex : `JSON.parse`, `catch (e)`) ?
 - [ ] `any`
@@ -164,6 +279,7 @@ const role = 'admin';
 - [ ] `object`
 > `unknown` est le « any sûr » : on peut y assigner n'importe quoi, mais on ne peut rien en faire tant qu'on ne l'a pas **affiné** (`typeof`, `instanceof`, type guard, validation Zod…). `any` désactive tout contrôle et se propage silencieusement.
 [doc]: Handbook — unknown | https://www.typescriptlang.org/fr/docs/handbook/2/functions.html
+[niveau]: facile
 
 ### Quel est le type de retour le plus précis de cette fonction ?
 ```ts
@@ -200,6 +316,7 @@ const port = config.port || 3000;
 - [ ] Erreur de compilation
 > `||` remplace toute valeur *falsy* (`0`, `''`, `false`, `NaN`, `null`, `undefined`). Pour ne remplacer que `null`/`undefined`, utilise `??` : `config.port ?? 3000` vaudrait `0`.
 [doc]: MDN — Opérateur de coalescence des nuls (??) | https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Operators/Nullish_coalescing
+[niveau]: facile
 
 ### Que fait l'opérateur `!` dans `document.getElementById('app')!.focus()` ?
 - [ ] Il lève une erreur si l'élément est `null`
@@ -208,6 +325,7 @@ const port = config.port || 3000;
 - [ ] Il est équivalent à `?.`
 > La *non-null assertion* est purement statique : elle disparaît à la compilation. Si l'élément est absent, on obtient un `TypeError` au runtime. À utiliser avec parcimonie, quand on a une certitude que TS ne peut pas déduire.
 [doc]: Handbook — Non-null assertion | https://www.typescriptlang.org/fr/docs/handbook/2/everyday-types.html
+[niveau]: facile
 
 ### Quel est l'intérêt principal de `satisfies` par rapport à une annotation `: Type` ?
 ```ts
@@ -219,6 +337,7 @@ const routes = { home: '/', user: '/user/:id' } satisfies Record<string, string>
 - [ ] Il rend l'objet `readonly`
 > Avec `: Record<string, string>`, `routes.home` serait `string` et `routes.inconnu` serait autorisé. Avec `satisfies`, l'objet est **validé** mais garde ses clés exactes : `routes.inconnu` est une erreur. Contrairement à `as`, `satisfies` ne ment jamais au compilateur.
 [doc]: Release notes TS 4.9 — satisfies (EN) | https://www.typescriptlang.org/docs/handbook/release-notes/typescript-4-9.html
+[niveau]: avancé
 
 ### Quelles valeurs sont assignables au type `{}` ?
 - [ ] Uniquement les objets littéraux vides
@@ -227,6 +346,7 @@ const routes = { home: '/', user: '/user/:id' } satisfies Record<string, string>
 - [ ] Uniquement `null` et `undefined`
 > `{}` signifie « n'importe quoi qui a une forme », donc tout sauf `null`/`undefined`. Pour « non primitif », c'est `object`. Pour un dictionnaire, préfère `Record<string, unknown>`.
 [doc]: Handbook — Types objet | https://www.typescriptlang.org/fr/docs/handbook/2/objects.html
+[niveau]: avancé
 
 ### Avec `strictNullChecks` activé, quel est le type de `user.email` ?
 ```ts
@@ -239,6 +359,7 @@ declare const user: User;
 - [ ] `string | null | undefined`
 > Une propriété optionnelle (`?`) ajoute `undefined` à son type. `null` n'est jamais ajouté automatiquement. (Avec l'option `exactOptionalPropertyTypes`, on ne pourrait même plus y affecter explicitement `undefined`.)
 [doc]: Handbook — Propriétés optionnelles | https://www.typescriptlang.org/fr/docs/handbook/2/objects.html
+[niveau]: facile
 
 ### Quel est le type inféré de `valeurs` ?
 ```ts
@@ -258,6 +379,7 @@ const valeurs = [1, 'a', true];
 - [ ] Une erreur
 > Bug historique de JavaScript, conservé pour compatibilité. C'est pourquoi un narrowing `typeof x === 'object'` ne suffit pas à exclure `null` : TS le sait et garde `object | null`.
 [doc]: MDN — typeof | https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Operators/typeof
+[niveau]: facile
 
 ### Ce code compile-t-il ?
 ```ts
@@ -270,6 +392,7 @@ callbacks.push(() => 42);
 - [ ] Oui, mais uniquement sans `strict`
 > Un type de fonction contextuel retournant `void` signifie « la valeur de retour sera ignorée », pas « doit retourner undefined ». C'est ce qui permet `[1, 2].forEach(n => arr.push(n))` alors que `push` retourne un `number`. En revanche, une **déclaration** `function f(): void { return 42 }` est une erreur.
 [doc]: Handbook — Type de retour void | https://www.typescriptlang.org/fr/docs/handbook/2/functions.html
+[niveau]: avancé
 
 ### Quel réglage `tsconfig` faut-il activer pour obtenir `strictNullChecks`, `noImplicitAny` et les autres contrôles stricts d'un coup ?
 - [ ] `"noImplicitReturns": true`
@@ -278,6 +401,7 @@ callbacks.push(() => 42);
 - [ ] `"isolatedModules": true`
 > `strict` active une famille d'options (`strictNullChecks`, `noImplicitAny`, `strictFunctionTypes`, `strictPropertyInitialization`, `useUnknownInCatchVariables`…). C'est le minimum attendu sur un projet professionnel.
 [doc]: Référence tsconfig — strict | https://www.typescriptlang.org/fr/tsconfig#strict
+[niveau]: facile
 
 ### Quel est le type de `e` dans `catch (e)` avec `strict: true` (TS ≥ 4.4) ?
 - [ ] `Error`
@@ -297,6 +421,7 @@ const log: () => void = () => 42;
 - [ ] Non, il faut écrire `() => undefined`
 > Pour un **type fonction** contextuel `() => void`, TS autorise une implémentation qui retourne quelque chose : c'est ce qui permet `arr.forEach((x) => list.push(x))` alors que `push` retourne un nombre. En revanche, une déclaration `function f(): void { return 42; }` est refusée. Et `log()` reste typé `void`.
 [doc]: Handbook — Retour de type void | https://www.typescriptlang.org/fr/docs/handbook/2/functions.html
+[niveau]: avancé
 
 ### Ce code compile-t-il ?
 ```ts
@@ -309,6 +434,7 @@ pair.push(2);
 - [ ] Oui, mais `pair` devient `[string, number, number]`
 > C'est un trou connu du système de types : un tuple est un tableau, et ses méthodes mutantes restent accessibles. Pour verrouiller la longueur, utilisez `readonly [string, number]` (ou `as const`), qui retire `push`, `pop`, `splice`…
 [doc]: Handbook — Tuples | https://www.typescriptlang.org/fr/docs/handbook/2/objects.html
+[niveau]: avancé
 
 ### Que se passe-t-il ici ?
 ```ts
@@ -354,6 +480,7 @@ deplacer(direction);
 - [ ] Il infère `NaN`
 > Une assertion `as` n'est acceptée que si l'un des deux types est assignable à l'autre. Sinon il faut passer explicitement par `as unknown as number` — ce qui doit alerter en revue de code. Et `as` ne fait **aucune conversion** à l'exécution.
 [doc]: Handbook — Type assertions | https://www.typescriptlang.org/fr/docs/handbook/2/everyday-types.html
+[niveau]: avancé
 
 ### Quel est le type de `ville` ?
 ```ts
@@ -367,6 +494,7 @@ const ville = user?.address?.city;
 - [ ] `unknown`
 > Le chaînage optionnel `?.` court-circuite et produit `undefined` dès qu'un maillon est `null` ou `undefined`. Le type résultant ajoute donc `undefined` (et jamais `null`). On le combine souvent avec `??` pour fournir une valeur par défaut.
 [doc]: MDN — Chaînage optionnel | https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Operators/Optional_chaining
+[niveau]: facile
 
 ### Quelles valeurs sont assignables au type `object` (minuscule) ? (plusieurs réponses)
 - [x] `{ a: 1 }`
@@ -376,6 +504,7 @@ const ville = user?.address?.city;
 - [ ] `null`
 > `object` désigne toute valeur **non primitive** : objets, tableaux, fonctions. Il exclut `string`, `number`, `boolean`, `bigint`, `symbol`, `null` et `undefined`. À ne pas confondre avec `{}` (tout sauf `null`/`undefined`) ni avec `Object` (à éviter).
 [doc]: Handbook — object | https://www.typescriptlang.org/fr/docs/handbook/2/functions.html
+[niveau]: avancé
 
 ### Que se passe-t-il à l'exécution de ce code JavaScript ?
 ```js
@@ -408,6 +537,7 @@ console.log(d.salut);
 - [ ] Erreur de compilation : `c` est une `const`
 > `d = c` copie la **référence**, pas l'objet : `c` et `d` désignent le même objet en mémoire. `const` interdit seulement de réassigner la variable (`c = …`), pas de modifier l'objet. Pour l'empêcher : `Object.freeze` à l'exécution, `Readonly<T>` ou `as const` à la compilation.
 [doc]: MDN — Utiliser les objets | https://developer.mozilla.org/fr/docs/Web/JavaScript/Guide/Working_with_objects
+[niveau]: facile
 
 ### Qu'affiche ce code ?
 ```ts
@@ -422,6 +552,7 @@ console.log(a == b, a === b);
 > `new Number(3)` crée un **objet** qui enveloppe le nombre (`typeof b === 'object'`). `==` convertit l'objet en primitive et compare `3` à `3` ; `===` compare un nombre à un objet et renvoie `false`. TS accepte ce code car `number` est assignable à `Number`. C'est l'une des raisons pour lesquelles on type toujours avec `number` (minuscule) et jamais avec `Number`.
 [doc]: MDN — Égalité et identité | https://developer.mozilla.org/fr/docs/Web/JavaScript/Equality_comparisons_and_sameness
 [doc]: MDN — Number | https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Global_Objects/Number
+[niveau]: avancé
 
 ### Ce code compile-t-il ?
 ```ts
@@ -435,6 +566,7 @@ function estMajeur(data: { age: number }) {
 - [ ] Non : il faut utiliser `==` pour comparer des objets
 > Les objets se comparent par **référence** : un littéral `{ age: 18 }` crée un nouvel objet, jamais identique à `data`, avec `===` comme avec `==`. Depuis TS 4.8, le compilateur refuse ce code (TS2839 : *This condition will always return 'false' since JavaScript compares objects by reference, not value*). Il faut comparer les champs (`data.age >= 18`).
 [doc]: MDN — Égalité et identité | https://developer.mozilla.org/fr/docs/Web/JavaScript/Equality_comparisons_and_sameness
+[niveau]: avancé
 
 ### Que vaut `typeof args` à l'exécution ?
 ```ts
@@ -449,6 +581,7 @@ age(21);
 - [ ] `"number[]"`
 > Le paramètre de reste est un vrai tableau, et un tableau est un objet : `typeof` renvoie `"object"`. Il n'existe pas de `typeof` « array » : pour tester un tableau à l'exécution, on utilise `Array.isArray(args)`. Le type `number[]` n'existe que pour le compilateur.
 [doc]: MDN — Paramètres du reste | https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Functions/rest_parameters
+[niveau]: facile
 
 ### Qu'affiche ce code JavaScript ?
 ```js
@@ -490,6 +623,7 @@ console.log(membres);
 - [x] `[{ nom: 'Lydia' }]`
 > Le tableau a reçu une **copie de la référence** au moment de sa création. Réassigner `personne` change seulement ce que désigne la variable : l'objet existe toujours, et le tableau pointe toujours vers lui.
 [doc]: MDN — Utiliser les objets | https://developer.mozilla.org/fr/docs/Web/JavaScript/Guide/Working_with_objects
+[niveau]: facile
 
 ### Que vaut `3 + 4 + '5'` ?
 - [ ] `"345"`
@@ -498,6 +632,7 @@ console.log(membres);
 - [ ] `"12"`
 > `+` s'évalue de gauche à droite : `3 + 4` donne le nombre `7`, puis `7 + '5'` est une concaténation, car dès qu'un opérande est une chaîne, l'autre est converti en chaîne. TS accepte `number + string` (le résultat est typé `string`) : il ne protège pas de ce piège, d'où l'intérêt de convertir explicitement (`Number(saisie)`) les valeurs venues d'un formulaire.
 [doc]: MDN — Addition (+) | https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Operators/Addition
+[niveau]: facile
 
 ### Qu'affiche ce code ?
 ```ts
@@ -516,3 +651,4 @@ console.log(personne, naissance);
 - [ ] `{ nom: 'Sarah' } '1997'`
 > JavaScript passe **toujours** les arguments par valeur. Pour un objet, cette valeur est une référence : la fonction peut donc modifier l'objet partagé (`membre.nom`), mais réassigner un paramètre (`annee = …`) ne touche que la variable locale. C'est pour cela qu'en React on crée un nouvel objet plutôt que de muter celui reçu en props ou en état.
 [doc]: MDN — Fonctions (paramètres) | https://developer.mozilla.org/fr/docs/Web/JavaScript/Guide/Functions
+[niveau]: facile

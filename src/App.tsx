@@ -257,7 +257,7 @@ function ExamPage() {
           ))}
         </div>
       </div>
-      <Quiz key={tracks.join(',')} pool={pool} sizes={[20, 40, 60]} showModule />
+      <Quiz key={tracks.join(',')} pool={pool} sizes={[20, 40, 60]} showModule defaultMode="all" />
     </article>
   );
 }

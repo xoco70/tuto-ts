@@ -109,6 +109,136 @@ Plusieurs décorateurs sur un même élément sont **évalués de haut en bas** 
 
 <!-- QUIZ -->
 
+### Quelle est la visibilité d'un membre de classe déclaré sans modificateur ?
+```ts
+class Produit {
+  prix = 10;
+}
+```
+- [x] `public`
+- [ ] `private`
+- [ ] `protected`
+- [ ] `readonly`
+> En TypeScript, un membre sans modificateur est `public` : accessible partout. On n'écrit donc `public` que pour l'explicite, ou dans une propriété de paramètre (`constructor(public nom: string)`).
+[doc]: Handbook — Member visibility | https://www.typescriptlang.org/fr/docs/handbook/2/classes.html
+[niveau]: facile
+
+### Que répond le compilateur à la dernière ligne ?
+```ts
+class Compte {
+  private solde = 0;
+}
+new Compte().solde;
+```
+- [ ] Rien, `solde` vaut `0`
+- [x] Une erreur : `solde` est privé et accessible seulement dans la classe `Compte`
+- [ ] Une erreur à l'exécution
+- [ ] Rien, mais `solde` vaut `undefined`
+> `private` restreint l'accès à l'intérieur de la classe. Le contrôle est **statique** : à l'exécution la propriété existe bien (c'est la différence avec un champ `#solde`).
+[doc]: Handbook — Member visibility | https://www.typescriptlang.org/fr/docs/handbook/2/classes.html
+[niveau]: facile
+
+### Quel mot-clé indique qu'une classe respecte le contrat d'une interface ?
+```ts
+interface Notifier { envoyer(msg: string): Promise<void> }
+class EmailNotifier ___ Notifier { /* ... */ }
+```
+- [x] `implements`
+- [ ] `extends`
+- [ ] `satisfies`
+- [ ] `inherits`
+> `implements` demande au compilateur de vérifier que la classe possède tous les membres de l'interface. `extends` sert à hériter d'une **classe** (ou, pour une interface, à étendre une autre interface).
+[doc]: Handbook — implements | https://www.typescriptlang.org/fr/docs/handbook/2/classes.html
+[niveau]: facile
+
+### Que se passe-t-il ici ?
+```ts
+abstract class BaseNotifier {
+  abstract envoyer(msg: string): void;
+}
+const n = new BaseNotifier();
+```
+- [ ] Une instance est créée, `envoyer` vaut `undefined`
+- [x] Erreur de compilation : on ne peut pas instancier une classe abstraite
+- [ ] Erreur à l'exécution seulement
+- [ ] Ça compile si on ajoute `as BaseNotifier`
+> Une classe `abstract` sert de modèle : on l'étend avec une sous-classe concrète qui implémente les méthodes abstraites, puis on instancie la sous-classe.
+[doc]: Handbook — Abstract classes | https://www.typescriptlang.org/fr/docs/handbook/2/classes.html
+[niveau]: facile
+
+### Pourquoi `SmsNotifier` ne compile-t-il pas ?
+```ts
+abstract class BaseNotifier {
+  abstract envoyer(msg: string): void;
+}
+class SmsNotifier extends BaseNotifier {}
+```
+- [ ] Une classe abstraite ne peut pas être étendue
+- [x] La sous-classe n'implémente pas la méthode abstraite `envoyer`
+- [ ] Il manque un constructeur
+- [ ] Il faut écrire `implements BaseNotifier`
+> Une méthode `abstract` n'a pas de corps : toute sous-classe **non abstraite** doit la fournir. C'est la garantie qu'apporte une classe abstraite par rapport à une simple classe de base.
+[doc]: Handbook — Abstract classes | https://www.typescriptlang.org/fr/docs/handbook/2/classes.html
+[niveau]: facile
+
+### Que vaut `Statut.Actif` à l'exécution ?
+```ts
+enum Statut { Actif = 'ACTIF', Suspendu = 'SUSPENDU' }
+```
+- [x] `'ACTIF'`
+- [ ] `0`
+- [ ] `'Actif'`
+- [ ] `undefined`, les enums sont effacés
+> Dans un **enum de chaînes**, chaque membre vaut la chaîne qu'on lui affecte. Contrairement aux types, un enum génère un objet JavaScript : la valeur existe donc bien à l'exécution.
+[doc]: Enums (EN) | https://www.typescriptlang.org/docs/handbook/enums.html
+[niveau]: facile
+
+### Que vaut `Direction.Bas` ?
+```ts
+enum Direction { Haut, Bas, Gauche, Droite }
+```
+- [ ] `'Bas'`
+- [x] `1`
+- [ ] `2`
+- [ ] `undefined`
+> Sans valeur explicite, les membres d'un enum **numérique** sont numérotés à partir de `0` : `Haut = 0`, `Bas = 1`, etc. Ajouter un membre au milieu décale les suivants, d'où l'intérêt des enums de chaînes pour des valeurs stockées en base.
+[doc]: Enums (EN) | https://www.typescriptlang.org/docs/handbook/enums.html
+[niveau]: facile
+
+### Comment lit-on la valeur de ce getter ?
+```ts
+class Compte {
+  constructor(private solde: number) {}
+  get soldeFormate(): string { return `${this.solde} EUR`; }
+}
+const compte = new Compte(100);
+```
+- [x] `compte.soldeFormate`
+- [ ] `compte.soldeFormate()`
+- [ ] `compte.get('soldeFormate')`
+- [ ] `Compte.soldeFormate`
+> Un accesseur `get` s'utilise comme une propriété, sans parenthèses : le code du getter s'exécute à chaque lecture. `Compte.soldeFormate` chercherait un membre statique.
+[doc]: Handbook — Getters / Setters | https://www.typescriptlang.org/fr/docs/handbook/2/classes.html
+[niveau]: facile
+
+### Qu'est-ce qu'un décorateur comme `@Log` posé sur une méthode ?
+- [ ] Un commentaire spécial lu par l'éditeur
+- [x] Une fonction appelée au moment de la définition de la classe, qui peut modifier ou envelopper la méthode
+- [ ] Une fonction appelée avant chaque appel de la méthode, sans possibilité de la modifier
+- [ ] Un mot-clé réservé à NestJS
+> Un décorateur est une simple **fonction** appliquée une fois, quand la classe est définie. Elle peut remplacer la méthode par une version enveloppée (journalisation, cache…) : c'est ce qui donne l'impression qu'elle agit « à chaque appel ».
+[doc]: Decorators — Composition (EN) | https://www.typescriptlang.org/docs/handbook/decorators.html#decorator-composition
+[niveau]: facile
+
+### Quelles options `tsconfig` un projet NestJS active-t-il pour ses décorateurs ? (plusieurs réponses)
+- [x] `experimentalDecorators`
+- [x] `emitDecoratorMetadata`
+- [ ] `erasableSyntaxOnly`
+- [ ] `noEmit`
+> NestJS repose sur les décorateurs « legacy » (`experimentalDecorators`), et sur les métadonnées de types émises par `emitDecoratorMetadata` pour l'injection de dépendances. `erasableSyntaxOnly` interdirait les propriétés de paramètre, et `noEmit` empêcherait de produire le JavaScript à exécuter.
+[doc]: Decorators — Metadata (EN) | https://www.typescriptlang.org/docs/handbook/decorators.html#metadata
+[niveau]: facile
+
 ### Que fait ce constructeur ?
 ```ts
 class UsersService {
@@ -121,6 +251,7 @@ class UsersService {
 - [ ] Il est invalide sans corps
 > C'est une **propriété de paramètre** : le modificateur (`private`, `public`, `readonly`…) transforme le paramètre en propriété de la classe. C'est la forme standard de l'injection de dépendances en NestJS et Angular.
 [doc]: Handbook — Parameter properties | https://www.typescriptlang.org/fr/docs/handbook/2/classes.html
+[niveau]: facile
 
 ### Quelle est la différence entre `private secret` et `#secret` ?
 - [ ] Aucune
@@ -161,6 +292,7 @@ class UsersService {
 - [ ] Il utilise les interfaces TypeScript au runtime
 > Avec `emitDecoratorMetadata`, toute classe décorée (ici `@Injectable()`) reçoit les constructeurs de ses paramètres en métadonnées. Comme il faut une **valeur**, cela ne fonctionne qu'avec des **classes**.
 [doc]: Decorators — Metadata (EN) | https://www.typescriptlang.org/docs/handbook/decorators.html#metadata
+[niveau]: avancé
 
 ### Pourquoi `constructor(private notifier: Notifier)` échoue-t-il en NestJS si `Notifier` est une interface ?
 - [ ] Les interfaces ne peuvent pas avoir de méthodes
@@ -170,6 +302,7 @@ class UsersService {
 > Solutions : un token (`Symbol` ou chaîne) + `@Inject(TOKEN)`, ou une **classe abstraite** comme token (elle existe au runtime). Question très fréquente en entretien NestJS.
 [doc]: NestJS — Custom providers (EN) | https://docs.nestjs.com/fundamentals/custom-providers
 [doc]: NestJS — Custom providers (FR) | https://docs.nest-js.fr/fundamentals/custom-providers
+[niveau]: avancé
 
 ### Dans quel ordre sont appliqués ces décorateurs ?
 ```ts
@@ -185,6 +318,7 @@ class C {
 - [ ] L'ordre est indéterminé
 > Comme une composition de fonctions `A(B(m))` : les expressions sont évaluées de haut en bas, l'application se fait de bas en haut.
 [doc]: Decorators — Composition (EN) | https://www.typescriptlang.org/docs/handbook/decorators.html#decorator-composition
+[niveau]: avancé
 
 ### Quelle différence majeure entre les décorateurs « legacy » (`experimentalDecorators`) et les décorateurs standard TC39 de TS 5.0 ?
 - [ ] Les standard ne fonctionnent que sur les fonctions
@@ -193,6 +327,7 @@ class C {
 - [ ] Il n'y a aucune différence
 > NestJS repose sur les décorateurs de paramètres (`@Body()`, `@Param()`, `@Inject()`) et sur les métadonnées de types : il utilise donc toujours `experimentalDecorators` + `emitDecoratorMetadata`.
 [doc]: Release notes TS 5.0 — Decorators (EN) | https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-0.html#decorators
+[niveau]: avancé
 
 ### Que vérifie `class EmailNotifier implements Notifier` ?
 - [ ] Il hérite des méthodes de `Notifier`
@@ -201,6 +336,7 @@ class C {
 - [ ] Il rend les méthodes abstraites
 > `implements` est un pur contrôle statique. Il ne fournit ni implémentation, ni type contextuel aux paramètres des méthodes (il faut les annoter).
 [doc]: Handbook — implements | https://www.typescriptlang.org/fr/docs/handbook/2/classes.html
+[niveau]: facile
 
 ### Quelle affirmation sur les classes abstraites est fausse ?
 - [ ] Elles ne peuvent pas être instanciées directement
@@ -217,6 +353,7 @@ class C {
 - [ ] Depuis partout en lecture seule
 > `protected` autorise les sous-classes, `private` non. Une sous-classe peut même rendre `public` un membre `protected` en le redéclarant.
 [doc]: Handbook — Member visibility | https://www.typescriptlang.org/fr/docs/handbook/2/classes.html
+[niveau]: facile
 
 ### Pourquoi perd-on `this` dans ce code et comment le corriger ?
 ```ts
@@ -241,6 +378,7 @@ setTimeout(c.inc, 10);
 - [ ] `interface User { id: string }`
 > Cette option n'autorise que la syntaxe qui peut être **simplement effacée** (ce que fait Node.js avec son *type stripping*, activé par défaut depuis Node 23.6). Les enums, `namespace` avec code et propriétés de paramètre génèrent du JS : interdits.
 [doc]: Release notes TS 5.8 — erasableSyntaxOnly (EN) | https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-8.html
+[niveau]: avancé
 
 ### Ce code compile-t-il ?
 ```ts
@@ -254,6 +392,7 @@ const a: A = new B();
 - [ ] Non, car il faut `implements A`
 > Sans membre privé, deux classes de même forme sont interchangeables. Un membre `private` ne compte comme compatible que s'il provient de la **même déclaration** : c'est une façon d'obtenir un typage quasi nominal.
 [doc]: Handbook — Classes (compatibilité) | https://www.typescriptlang.org/fr/docs/handbook/2/classes.html
+[niveau]: avancé
 
 ### Avec `noImplicitOverride`, que protège le mot-clé `override` ?
 - [ ] Il empêche une sous-classe de redéfinir la méthode
@@ -293,6 +432,7 @@ new Personne('Ada', 'Lovelace').complet = 'X';
 - [ ] `interface I extends X, Y {}`
 > Une classe n'hérite que d'**une seule** classe (héritage simple de JavaScript), mais peut implémenter plusieurs interfaces. Une interface, elle, peut étendre plusieurs interfaces. Pour combiner des comportements, on préfère la composition (ou les mixins).
 [doc]: Handbook — implements | https://www.typescriptlang.org/fr/docs/handbook/2/classes.html
+[niveau]: facile
 
 ### Pourquoi ce constructeur ne compile-t-il pas ?
 ```ts
@@ -318,6 +458,7 @@ class Admin extends User {
 - [ ] Uniquement via un setter
 > `readonly` interdit toute affectation **après** la construction. C'est une garantie de compilation seulement : rien n'est gelé à l'exécution.
 [doc]: Handbook — readonly | https://www.typescriptlang.org/fr/docs/handbook/2/classes.html
+[niveau]: facile
 
 ### Pourquoi ce code est-il signalé avec `noImplicitAny` ?
 ```ts
@@ -334,6 +475,7 @@ class Verificateur implements Verifiable {
 - [ ] Il n'est pas signalé, `s` est inféré `string`
 > `implements` vérifie seulement que la classe est **compatible** avec l'interface ; il ne change pas le type de la classe et ne fournit pas de typage contextuel aux méthodes. Il faut annoter `verifier(s: string)`.
 [doc]: Handbook — implements (mises en garde) | https://www.typescriptlang.org/fr/docs/handbook/2/classes.html
+[niveau]: avancé
 
 ### Ce code compile-t-il ?
 ```ts
@@ -352,6 +494,7 @@ freddie.changerCouleur('orange');
 > Un membre `static` appartient à la **classe** (`Cameleon.changerCouleur(…)`), pas aux instances. TS refuse l'appel (TS2576 : *Did you mean to access the static member 'Cameleon.changerCouleur' instead?*). En JavaScript pur, l'erreur n'apparaîtrait qu'à l'exécution : `TypeError: freddie.changerCouleur is not a function`.
 [doc]: MDN — static | https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Classes/static
 [doc]: Handbook — Membres statiques | https://www.typescriptlang.org/fr/docs/handbook/2/classes.html
+[niveau]: facile
 
 ### Tous les objets JavaScript ont-ils un prototype ?
 - [ ] Oui, tous les objets héritent de `Object.prototype`

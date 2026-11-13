@@ -213,7 +213,15 @@ kbd {
 .pool-stats { display: flex; flex-wrap: wrap; gap: 18px; font-size: 14px; }
 .size-picker { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
 .quiz-progress { display: flex; align-items: center; gap: 14px; font-size: 13px; color: var(--muted); margin-bottom: 12px; }
-.question .tag { margin-bottom: 12px; }
+.question-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 12px; }
+.quiz-setup h4 { margin: 20px 0 0; font-size: 14px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+.level-badge { display: inline-block; font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 999px; border: 1px solid currentColor; }
+.level-badge.level-1 { color: var(--good); background: var(--good-bg); }
+.level-badge.level-2 { color: var(--mid); background: var(--mid-bg); }
+.level-badge.level-3 { color: var(--bad); background: var(--bad-bg); }
+.ladder { list-style: none; display: flex; flex-wrap: wrap; gap: 10px 24px; padding: 0; margin: 4px 0 0; font-size: 14px; }
+.ladder li { display: flex; align-items: center; gap: 8px; }
+.ladder li.locked .level-badge { opacity: 0.45; }
 .question > .md { font-size: 1.05rem; font-weight: 500; }
 .hint { font-size: 13px; color: var(--mid); margin: 8px 0 0; }
 .options { display: flex; flex-direction: column; gap: 10px; margin-top: 18px; }

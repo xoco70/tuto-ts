@@ -32,7 +32,11 @@ for (const file of walk(root).sort()) {
       questionIds.set(question.id, source);
     }
     total += module.questions.length;
-    console.log(`✓ ${source.padEnd(40)} ${String(module.questions.length).padStart(3)} questions`);
+    const byLevel = [1, 2, 3].map((level) => module.questions.filter((question) => question.difficulty === level).length);
+    console.log(
+      `✓ ${source.padEnd(40)} ${String(module.questions.length).padStart(3)} questions` +
+        `  (facile ${byLevel[0]}, intermédiaire ${byLevel[1]}, avancé ${byLevel[2]})`,
+    );
   } catch (error) {
     failed = true;
     console.error(`✗ ${(error as Error).message}`);

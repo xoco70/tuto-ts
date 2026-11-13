@@ -12,6 +12,9 @@ export interface DocLink {
   url: string;
 }
 
+/** 1 = facile, 2 = intermédiaire (par défaut), 3 = avancé. */
+export type Difficulty = 1 | 2 | 3;
+
 export interface Question {
   /** Identifiant stable : module + hash de l'énoncé (survit aux réordonnancements). */
   id: string;
@@ -22,6 +25,7 @@ export interface Question {
   answers: number[];
   explanation: string;
   docs: DocLink[];
+  difficulty: Difficulty;
 }
 
 export interface Module {

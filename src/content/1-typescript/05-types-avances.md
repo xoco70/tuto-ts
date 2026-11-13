@@ -127,6 +127,128 @@ Les [Type Challenges](https://github.com/type-challenges/type-challenges) font r
 
 <!-- QUIZ -->
 
+### Quel est le type de `C` ?
+```ts
+const config = { port: 3000, host: 'localhost' };
+type C = typeof config;
+```
+- [x] `{ port: number; host: string }`
+- [ ] `'object'`
+- [ ] `{ port: 3000; host: 'localhost' }`
+- [ ] `'port' | 'host'`
+> Utilisé dans une position de type, `typeof` récupère le type d'une **valeur** existante. Les propriétés sont élargies (`number`, `string`) car l'objet n'est pas `as const`. À ne pas confondre avec le `typeof` JavaScript, qui renvoie une chaîne à l'exécution.
+[doc]: Handbook — typeof | https://www.typescriptlang.org/fr/docs/handbook/2/typeof-types.html
+[niveau]: facile
+
+### Quel est le type de `E` ?
+```ts
+interface User { id: number; email: string }
+type E = User['email'];
+```
+- [x] `string`
+- [ ] `'email'`
+- [ ] `User`
+- [ ] Erreur : on ne peut pas indexer une interface
+> L'**accès indexé** `T['cle']` lit le type d'une propriété, comme on lirait sa valeur. Pratique pour réutiliser un type sans le recopier : si `email` change de type, `E` suit.
+[doc]: Handbook — Indexed access types | https://www.typescriptlang.org/fr/docs/handbook/2/indexed-access-types.html
+[niveau]: facile
+
+### Quel est l'effet de `Partial<User>` ?
+```ts
+interface User { nom: string; age: number }
+```
+- [x] Toutes les propriétés deviennent optionnelles : `{ nom?: string; age?: number }`
+- [ ] Seule la première propriété est conservée
+- [ ] Les propriétés deviennent `readonly`
+- [ ] Les propriétés peuvent valoir `null`
+> `Partial<T>` ajoute `?` à chaque propriété. Usage typique : un DTO de mise à jour, où l'on n'envoie que les champs modifiés. Son inverse est `Required<T>`.
+[doc]: Utility types — Partial (EN) | https://www.typescriptlang.org/docs/handbook/utility-types.html#partialtype
+[niveau]: facile
+
+### Comment obtenir un type `PublicUser` identique à `User` mais sans `password` ?
+```ts
+interface User { id: number; email: string; password: string }
+```
+- [x] `type PublicUser = Omit<User, 'password'>`
+- [ ] `type PublicUser = Pick<User, 'password'>`
+- [ ] `type PublicUser = Exclude<User, 'password'>`
+- [ ] `type PublicUser = Partial<User>`
+> `Omit<T, K>` retire des clés d'un type objet. `Pick<User, 'password'>` ferait l'inverse (ne garder que `password`), et `Exclude` travaille sur les membres d'une union, pas sur les propriétés.
+[doc]: Utility types (EN) | https://www.typescriptlang.org/docs/handbook/utility-types.html
+[niveau]: facile
+
+### Quel est le type de `Apercu` ?
+```ts
+interface Article { id: number; titre: string; contenu: string }
+type Apercu = Pick<Article, 'id' | 'titre'>;
+```
+- [x] `{ id: number; titre: string }`
+- [ ] `{ contenu: string }`
+- [ ] `'id' | 'titre'`
+- [ ] `{ id?: number; titre?: string }`
+> `Pick<T, K>` ne garde que les clés listées dans `K`, avec leur type d'origine. On l'utilise pour exposer une vue réduite d'un modèle (liste, aperçu) sans redéclarer les champs.
+[doc]: Utility types (EN) | https://www.typescriptlang.org/docs/handbook/utility-types.html
+[niveau]: facile
+
+### Quel est l'équivalent de `Record<'fr' | 'en', string>` ?
+- [x] `{ fr: string; en: string }`
+- [ ] `{ fr?: string; en?: string }`
+- [ ] `['fr' | 'en', string]`
+- [ ] `string[]`
+> `Record<K, V>` construit un objet dont les clés sont `K` et les valeurs `V`. Si `K` est une union de littéraux, **toutes** les clés sont obligatoires : idéal pour une table de traductions où aucune langue ne doit manquer.
+[doc]: Utility types (EN) | https://www.typescriptlang.org/docs/handbook/utility-types.html
+[niveau]: facile
+
+### Que se passe-t-il à la dernière ligne ?
+```ts
+const u: Readonly<{ nom: string }> = { nom: 'Ada' };
+u.nom = 'Grace';
+```
+- [ ] `u.nom` vaut `'Grace'`
+- [x] Erreur de compilation : `nom` est en lecture seule
+- [ ] Erreur à l'exécution : l'objet est gelé
+- [ ] L'affectation est ignorée silencieusement
+> `Readonly<T>` rend toutes les propriétés `readonly`, au niveau des **types** seulement : rien n'est gelé à l'exécution (pour cela, `Object.freeze`). L'effet est aussi superficiel : les objets imbriqués restent modifiables.
+[doc]: Utility types (EN) | https://www.typescriptlang.org/docs/handbook/utility-types.html
+[niveau]: facile
+
+### Quel est le type de `T` ?
+```ts
+type T = NonNullable<string | null | undefined>;
+```
+- [x] `string`
+- [ ] `string | null`
+- [ ] `never`
+- [ ] `string | undefined`
+> `NonNullable<T>` retire `null` et `undefined` d'une union. Pratique pour décrire une valeur après une vérification `if (x != null)`, ou le résultat d'un `filter` qui élimine les vides.
+[doc]: Utility types (EN) | https://www.typescriptlang.org/docs/handbook/utility-types.html
+[niveau]: facile
+
+### Quel est le type de `A` ?
+```ts
+type EstTexte<T> = T extends string ? 'oui' : 'non';
+type A = EstTexte<number>;
+```
+- [ ] `'oui'`
+- [x] `'non'`
+- [ ] `'oui' | 'non'`
+- [ ] `boolean`
+> Un **type conditionnel** se lit comme un ternaire : si `T` est assignable à `string`, on obtient la première branche, sinon la seconde. `number` n'est pas une `string` : le résultat est `'non'`.
+[doc]: Handbook — Conditional types | https://www.typescriptlang.org/fr/docs/handbook/2/conditional-types.html
+[niveau]: facile
+
+### Quelles valeurs sont acceptées par ce type ? (plusieurs réponses)
+```ts
+type UserKey = `user-${number}`;
+```
+- [x] `'user-42'`
+- [x] `'user-7'`
+- [ ] `'user-abc'`
+- [ ] `'admin-1'`
+> Un **template literal type** décrit un motif de chaîne : ici le préfixe `user-` suivi d'un nombre. Le compilateur refuse toute chaîne littérale qui ne correspond pas au motif.
+[doc]: Handbook — Template literal types | https://www.typescriptlang.org/fr/docs/handbook/2/template-literal-types.html
+[niveau]: facile
+
 ### Quel est le type de `Cle` ?
 ```ts
 const config = { port: 3000, host: 'localhost' };
@@ -138,6 +260,7 @@ type Cle = keyof typeof config;
 - [ ] Erreur : `keyof` ne s'applique pas à une valeur
 > `typeof config` passe de la valeur à son type, puis `keyof` donne l'union des clés. `keyof config` (sans `typeof`) serait une erreur, car `keyof` attend un type.
 [doc]: Handbook — keyof | https://www.typescriptlang.org/fr/docs/handbook/2/keyof-types.html
+[niveau]: facile
 
 ### Quelle est la différence entre `Omit` et `Exclude` ?
 - [ ] Aucune, ce sont des alias
@@ -158,6 +281,7 @@ type C = ToArray<string | number>;
 - [ ] `any[]`
 > Un conditional type sur un paramètre nu est **distributif** : il est appliqué à chaque membre de l'union puis les résultats sont réunis. Pour l'éviter, on entoure de crochets : `[T] extends [any]`.
 [doc]: Handbook — Distributive conditional types | https://www.typescriptlang.org/fr/docs/handbook/2/conditional-types.html
+[niveau]: avancé
 
 ### Que produit ce mapped type ?
 ```ts
@@ -193,6 +317,7 @@ type G = Getters<{ nom: string; age: number }>;
 - [ ] Erreur : `as` est interdit dans un mapped type
 > Le *key remapping* (`as`, TS 4.1) renomme les clés via un template literal type. `string & K` sert à exclure les clés `symbol`/`number` que `Capitalize` n'accepte pas.
 [doc]: Handbook — Key remapping via as | https://www.typescriptlang.org/fr/docs/handbook/2/mapped-types.html
+[niveau]: avancé
 
 ### Comment supprimer une clé dans un mapped type avec `as` ?
 - [ ] En renvoyant `undefined`
@@ -201,6 +326,7 @@ type G = Getters<{ nom: string; age: number }>;
 - [ ] Ce n'est pas possible, il faut `Omit`
 > `{ [K in keyof T as T[K] extends Function ? never : K]: T[K] }` retire toutes les méthodes. Une clé remappée en `never` disparaît du résultat.
 [doc]: Handbook — Key remapping via as | https://www.typescriptlang.org/fr/docs/handbook/2/mapped-types.html
+[niveau]: avancé
 
 ### Combien de membres contient ce type ?
 ```ts
@@ -232,6 +358,7 @@ type Role = (typeof ROLES)[number];
 - [ ] `Args<F>`
 > `Parameters<(a: string, b?: number) => void>` → `[a: string, b?: number]`. Utile pour écrire un wrapper qui garde la signature : `(...args: Parameters<typeof fn>) => ...`.
 [doc]: Utility types — Parameters (EN) | https://www.typescriptlang.org/docs/handbook/utility-types.html#parameterstype
+[niveau]: facile
 
 ### À quoi sert un « branded type » comme `type UserId = string & { __brand: 'UserId' }` ?
 - [ ] À valider le format d'une chaîne à l'exécution
@@ -274,6 +401,7 @@ interface User { id: string; nom: string; email: string }
 - [ ] `Required<Omit<User, 'id'>>`
 > On retire `id` puis on rend tout optionnel. NestJS fournit l'équivalent pour les classes DTO (qui gardent les décorateurs de validation) : `PartialType(OmitType(CreateUserDto, ['id']))` depuis `@nestjs/mapped-types` ou `@nestjs/swagger`.
 [doc]: Utility types — Partial (EN) | https://www.typescriptlang.org/docs/handbook/utility-types.html#partialtype
+[niveau]: facile
 
 ### Quel est le type de `R` ?
 ```ts
@@ -286,6 +414,7 @@ type R = IsNever<never>;
 - [ ] `boolean`
 > Piège classique : `never` est une **union vide**. Un conditional distributif appliqué à une union vide produit… une union vide, donc `never`. La version correcte : `[T] extends [never] ? true : false`.
 [doc]: Handbook — Distributive conditional types | https://www.typescriptlang.org/fr/docs/handbook/2/conditional-types.html
+[niveau]: avancé
 
 ### Quels utilitaires agissent sur les membres d'une union (et non sur les propriétés d'un objet) ? (plusieurs réponses)
 - [x] `Exclude`
@@ -316,6 +445,7 @@ type Cles = keyof { [cle: string]: boolean };
 - [ ] `PropertyKey`
 > En JavaScript, les clés numériques sont converties en chaînes (`obj[0]` équivaut à `obj['0']`). Une signature d'index `string` accepte donc aussi les clés `number`, et `keyof` renvoie `string | number`.
 [doc]: Handbook — keyof | https://www.typescriptlang.org/fr/docs/handbook/2/keyof-types.html
+[niveau]: avancé
 
 ### Comment obtenir le type de l'objet retourné par `creerUser` sans le réécrire ?
 ```ts
@@ -329,6 +459,7 @@ function creerUser() {
 - [ ] `type U = Awaited<creerUser>`
 > `ReturnType` attend un **type** de fonction : `typeof` fait le pont entre l'espace des valeurs et celui des types. Pour une fonction `async`, on combine : `Awaited<ReturnType<typeof fn>>`.
 [doc]: Handbook — typeof | https://www.typescriptlang.org/fr/docs/handbook/2/typeof-types.html
+[niveau]: facile
 
 ### Quel est le type de `R` ?
 ```ts
@@ -341,6 +472,7 @@ type R = EstString<string | number>;
 - [ ] `never`
 > Entourer `T` de crochets **désactive la distributivité** : on teste l'union entière, et `string | number` n'est pas assignable à `string`. Sans crochets (`T extends string ? …`), le résultat aurait été distribué : `true | false`, soit `boolean`.
 [doc]: Handbook — Distributive conditional types | https://www.typescriptlang.org/fr/docs/handbook/2/conditional-types.html
+[niveau]: avancé
 
 ### Que produit ce mapped type ?
 ```ts
@@ -364,6 +496,7 @@ type Json = string | number | boolean | null | Json[] | { [cle: string]: Json };
 - [x] `{ calcul: () => 42 }`
 > Un alias de type peut être **récursif**. Ce type décrit fidèlement ce que `JSON.stringify` sait représenter : `undefined` et les fonctions en sont exclus (ils sont omis à la sérialisation), tout comme `Date` (devenue une chaîne).
 [doc]: Handbook — Objets et alias de types | https://www.typescriptlang.org/fr/docs/handbook/2/objects.html
+[niveau]: avancé
 
 ### Comment obtenir le type `number` du prix d'une ligne de commande ?
 ```ts
@@ -390,3 +523,4 @@ type Getters<T> = {
 - [ ] C'est inutile, `K` est toujours une `string`
 > `keyof T` est de type `string | number | symbol`. L'intersection `string & K` ne garde que les clés chaînes (les autres deviennent `never` et disparaissent). `Getters<{ nom: string }>` donne `{ getNom: () => string }`.
 [doc]: Handbook — Key remapping via as | https://www.typescriptlang.org/fr/docs/handbook/2/mapped-types.html
+[niveau]: avancé

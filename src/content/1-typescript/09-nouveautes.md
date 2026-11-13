@@ -216,6 +216,99 @@ TS **7.1** (bêta en octobre 2026) réintroduit une API, découpée en points d'
 
 <!-- QUIZ -->
 
+### Dans quel langage le compilateur de TypeScript 7.0 a-t-il été réécrit ?
+- [ ] Rust
+- [x] Go
+- [ ] C++
+- [ ] Il est toujours écrit en TypeScript
+> TS 7.0 est un **port en Go** du compilateur et du language service (projet *Corsa*). Le langage ne change pas : seul l'outil devient un binaire natif, parallèle et bien plus rapide.
+[doc]: Announcing TypeScript 7.0 (EN) | https://devblogs.microsoft.com/typescript/announcing-typescript-7-0/
+[niveau]: facile
+
+### Quelle méthode un objet doit-il exposer pour être utilisable avec `using` ?
+- [ ] `close()`
+- [x] `[Symbol.dispose]()`
+- [ ] `dispose()`
+- [ ] `[Symbol.iterator]()`
+> `using` appelle `[Symbol.dispose]()` à la sortie du bloc. Pour la version `await using`, c'est `[Symbol.asyncDispose]()`, qui renvoie une Promise.
+[doc]: TypeScript 5.2 — using Declarations (EN) | https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-2.html
+[niveau]: facile
+
+### Avant TS 5.5, comment écrivait-on ce `filter` pour obtenir un `number[]` ?
+```ts
+const ids = [1, undefined, 3].filter(/* ??? */);
+```
+- [ ] `(x) => x !== undefined as number`
+- [x] `(x): x is number => x !== undefined`
+- [ ] `(x) => x is number`
+- [ ] `<number>(x) => x !== undefined`
+> Un **prédicat de type** `x is number` dans le type de retour indique à TS que, si la fonction renvoie `true`, `x` est un `number`. Depuis TS 5.5, il est inféré automatiquement dans les cas simples comme celui-ci.
+[doc]: TypeScript 5.5 — Inferred Type Predicates (EN) | https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-5.html
+[niveau]: facile
+
+### Avec `erasableSyntaxOnly`, par quoi peut-on remplacer un `enum` ? (plusieurs réponses)
+- [x] Une union de littéraux : `type Role = 'admin' | 'user'`
+- [x] Un objet `as const` : `const Role = { Admin: 'admin', User: 'user' } as const`
+- [ ] Un `namespace Role`
+- [ ] Un `const enum Role`
+> Une union de littéraux est purement un type, donc effaçable. Un objet `as const` est du JavaScript ordinaire, avec un type dérivé (`(typeof Role)[keyof typeof Role]`). `namespace` et `const enum` génèrent ou remplacent du code : ils sont refusés eux aussi.
+[doc]: TypeScript 5.8 — erasableSyntaxOnly (EN) | https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-8.html
+[niveau]: facile
+
+### Que fait Node.js quand il exécute directement un fichier `.ts` (*type stripping*) ?
+- [ ] Il vérifie les types puis exécute le code
+- [x] Il retire les annotations de type sans les vérifier, puis exécute le JavaScript restant
+- [ ] Il appelle `tsc` en arrière-plan
+- [ ] Il convertit les types en vérifications à l'exécution
+> Node se contente d'effacer les types : aucune vérification n'a lieu. Il faut donc toujours lancer `tsc --noEmit` (en CI, dans l'éditeur). C'est pour garantir que cet effacement suffit qu'existe `erasableSyntaxOnly`.
+[doc]: TypeScript 5.8 — erasableSyntaxOnly (EN) | https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-8.html
+[niveau]: facile
+
+### Quelle est la particularité de TypeScript 6.0 ?
+- [ ] Elle introduit le compilateur en Go
+- [x] C'est la dernière version écrite en JavaScript, qui prépare la migration vers 7.0
+- [ ] Elle supprime le mode `strict`
+- [ ] Elle ajoute la vérification des types à l'exécution
+> 6.0 est une version de **transition** : elle adopte les nouvelles valeurs par défaut et déprécie les options que 7.0 supprimera. Corriger ses avertissements rend la bascule vers le compilateur natif presque transparente.
+[doc]: Announcing TypeScript 6.0 (EN) | https://devblogs.microsoft.com/typescript/announcing-typescript-6-0/
+[niveau]: facile
+
+### Quelle option `tsconfig` active les décorateurs « historiques » dont dépend NestJS ?
+- [ ] `"decorators": true`
+- [x] `"experimentalDecorators": true`
+- [ ] `"strict": true`
+- [ ] Aucune, ils sont activés par défaut depuis TS 5.0
+> Sans option, TS 5.0+ compile les décorateurs **standard** (TC39). `experimentalDecorators` revient à l'ancien modèle, accompagné d'`emitDecoratorMetadata`, nécessaire à l'injection de dépendances de NestJS.
+[doc]: TypeScript 5.0 — Decorators (EN) | https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-0.html
+[niveau]: facile
+
+### Que fait `"ignoreDeprecations": "6.0"` dans un `tsconfig.json` ?
+- [ ] Il corrige automatiquement les options dépréciées
+- [x] Il masque temporairement les avertissements de dépréciation de TS 6.0, mais TS 7.0 refusera quand même ces options
+- [ ] Il fait tourner TS 7 en mode compatible 6.0
+- [ ] Il désactive le mode `strict`
+> C'est une solution d'attente, pas une migration : les options dépréciées en 6.0 sont supprimées en 7.0. La bonne démarche est de les corriger tant qu'on est en 6.0.
+[doc]: Announcing TypeScript 6.0 (EN) | https://devblogs.microsoft.com/typescript/announcing-typescript-6-0/
+[niveau]: facile
+
+### Depuis TS 5.9, que produit `tsc --init` ?
+- [ ] Un `tsconfig.json` de plusieurs centaines de lignes commentées, en mode non strict
+- [x] Un `tsconfig.json` court et moderne : `strict`, `module: nodenext`, `verbatimModuleSyntax`, `noUncheckedIndexedAccess`…
+- [ ] Un projet complet avec `package.json` et dossier `src`
+- [ ] Un fichier `.d.ts`
+> Le nouveau `tsc --init` part des réglages recommandés aujourd'hui plutôt que d'une longue liste d'options commentées. C'est un bon point de départ pour un nouveau projet.
+[doc]: TypeScript 5.9 — Support for --module node20 (EN) | https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-9.html
+[niveau]: facile
+
+### Ton `tsconfig.json` contient `"target": "es5"`. Que se passe-t-il avec TS 7.0 ?
+- [ ] Rien, ES5 reste la valeur par défaut
+- [x] L'option est refusée : la cible minimale est désormais ES2015
+- [ ] TS 7 émet automatiquement de l'ES2015 sans prévenir
+- [ ] Le code est émis en ES3
+> `target: es5` est déprécié en 6.0 et supprimé en 7.0 : tous les environnements actuels supportent au moins ES2015 (classes, `let`/`const`, flèches). Il suffit de choisir une cible moderne comme `es2022`.
+[doc]: Announcing TypeScript 6.0 (EN) | https://devblogs.microsoft.com/typescript/announcing-typescript-6-0/
+[niveau]: facile
+
 ### Que garantit `using` dans ce code ?
 ```ts
 {
@@ -229,6 +322,7 @@ TS **7.1** (bêta en octobre 2026) réintroduit une API, découpée en points d'
 - [ ] `conn` est libérée par le garbage collector immédiatement
 > `using` (TS 5.2, proposition *Explicit Resource Management*) appelle `Symbol.dispose` en fin de portée, dans l'ordre inverse des déclarations. C'est un `try/finally` attaché à la ressource. `await using` fait la même chose avec `Symbol.asyncDispose`.
 [doc]: TypeScript 5.2 — using Declarations (EN) | https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-2.html
+[niveau]: facile
 
 ### Depuis TS 5.5, quel est le type de `ids` ?
 ```ts
@@ -252,6 +346,7 @@ choisir(['a', 'b'], 'c');
 - [ ] Il désactive la vérification de `defaut`
 > Sans `NoInfer`, TS utiliserait aussi `'c'` comme candidat et élargirait `T` à `"a" | "b" | "c"` : aucune erreur. `NoInfer<T>` (TS 5.4) exclut une position de l'inférence.
 [doc]: TypeScript 5.4 — NoInfer (EN) | https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-4.html
+[niveau]: avancé
 
 ### Quel est le type de `r` ?
 ```ts
@@ -264,6 +359,7 @@ const r = liste(['GET', 'POST']);
 - [ ] `any[]`
 > Un paramètre de type `const` (TS 5.0) infère comme si l'argument était suivi de `as const` : littéraux et tuples conservés. La contrainte `readonly` est nécessaire, sinon l'inférence retombe sur un tableau mutable.
 [doc]: TypeScript 5.0 — const Type Parameters (EN) | https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-0.html
+[niveau]: avancé
 
 ### Pourquoi NestJS utilise-t-il toujours `experimentalDecorators: true` malgré les décorateurs standard de TS 5.0 ?
 - [ ] Les décorateurs standard sont plus lents
@@ -285,6 +381,7 @@ if (/^\d+$/) {
 - [ ] Un avertissement de performance
 > TS 5.6 refuse les conditions dont le résultat est connu à la compilation : regex, fonctions, objets littéraux toujours truthy, ou `??` dont le membre gauche n'est jamais nullish. Ce sont presque toujours des bugs.
 [doc]: TypeScript 5.6 — Disallowed Nullish and Truthy Checks (EN) | https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-6.html
+[niveau]: facile
 
 ### Avec `erasableSyntaxOnly: true`, lesquelles de ces constructions sont refusées ? (plusieurs réponses)
 - [x] `enum Statut { Actif, Inactif }`
@@ -309,6 +406,7 @@ if (/^\d+$/) {
 - [ ] `import json data from './data.json'`
 > Les *import attributes* (`with`) ont remplacé les *import assertions* (`assert`). TS les supporte depuis 5.3 ; `assert` est une erreur depuis 6.0. Node exige l'attribut pour importer du JSON en ESM.
 [doc]: TypeScript 5.3 — Import Attributes (EN) | https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-3.html
+[niveau]: facile
 
 ### Que fait `import defer` (TS 5.9) ?
 ```ts
@@ -320,6 +418,7 @@ import defer * as rapport from './rapport-lourd.js';
 - [ ] Il n'importe que les types
 > `import defer` (proposition TC39) retarde l'exécution d'un module coûteux sans rendre le code asynchrone. Seule la forme espace de noms (`* as`) est autorisée, et l'option `module` doit être `esnext` ou `preserve`.
 [doc]: TypeScript 5.9 — import defer (EN) | https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-9.html
+[niveau]: avancé
 
 ### Un projet Node passe de TS 5.9 à 6.0 sans toucher son tsconfig, et `process` devient inconnu. Pourquoi ?
 - [ ] `@types/node` est déprécié
@@ -336,6 +435,7 @@ import defer * as rapport from './rapport-lourd.js';
 - [ ] `"moduleResolution": "bundler"`
 > La cible minimale devient ES2015 ; la résolution `node10` (sans `exports`) disparaît au profit de `nodenext` et `bundler` ; `baseUrl` n'est plus une racine de résolution (`paths` devient relatif au tsconfig). `ignoreDeprecations: "6.0"` ne fait que repousser le problème.
 [doc]: Announcing TypeScript 6.0 (EN) | https://devblogs.microsoft.com/typescript/announcing-typescript-6-0/
+[niveau]: avancé
 
 ### Quelles sont les valeurs par défaut de `strict` et `module` à partir de TS 6.0 ?
 - [ ] `strict: false`, `module: commonjs`
@@ -344,6 +444,7 @@ import defer * as rapport from './rapport-lourd.js';
 - [ ] Elles n'ont pas de valeur par défaut, il faut les préciser
 > 6.0 aligne les défauts sur les usages modernes : mode strict et ESM. Dans un tsconfig existant, ces options sont généralement déjà explicites ; le changement touche surtout les petits projets et les fichiers compilés sans config.
 [doc]: Announcing TypeScript 6.0 (EN) | https://devblogs.microsoft.com/typescript/announcing-typescript-6-0/
+[niveau]: facile
 
 ### Qu'est-ce qui change fondamentalement avec TypeScript 7.0 ?
 - [ ] La syntaxe du langage
@@ -352,6 +453,7 @@ import defer * as rapport from './rapport-lourd.js';
 - [ ] Les types sont vérifiés à l'exécution
 > Le port natif (projet *Corsa*) conserve la sémantique du langage. Le gain vient du code natif, de la mémoire partagée et du parallélisme (`--checkers`, `--builders`). La commande reste `tsc`, installée via le paquet `typescript`.
 [doc]: Announcing TypeScript 7.0 (EN) | https://devblogs.microsoft.com/typescript/announcing-typescript-7-0/
+[niveau]: facile
 
 ### Une équipe passe à TS 7.0 et son lint typé (typescript-eslint) casse. Pourquoi, et que faire ?
 - [ ] typescript-eslint ne supporte pas le mode strict
@@ -384,6 +486,7 @@ import defer * as rapport from './rapport-lourd.js';
 - [ ] Convertir le projet en JavaScript
 > 6.0 existe précisément pour ça : même comportement que 7.0, mais avec des avertissements au lieu d'erreurs, et la possibilité de reproduire l'ordre des types de 7.0 (`--stableTypeOrdering`). Une fois le projet propre en 6.0, la bascule en 7.0 est presque transparente.
 [doc]: Announcing TypeScript 6.0 (EN) | https://devblogs.microsoft.com/typescript/announcing-typescript-6-0/
+[niveau]: facile
 
 ### Que vérifie `--noUncheckedSideEffectImports` (activé par défaut depuis 6.0) ?
 ```ts
@@ -396,6 +499,7 @@ import './polyfills';
 - [ ] Que les imports sont triés
 > Avant, TS ignorait silencieusement un import sans liaison qu'il ne trouvait pas : une faute de frappe passait inaperçue. Pour les CSS dans un projet bundler, il faut une déclaration `declare module '*.css'` (fournie par `vite/client`).
 [doc]: TypeScript 5.6 — noUncheckedSideEffectImports (EN) | https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-6.html
+[niveau]: avancé
 
 ### À quoi sert `isolatedDeclarations` (TS 5.5) ?
 - [ ] À interdire les `declare` globaux
@@ -404,6 +508,7 @@ import './polyfills';
 - [ ] À générer un `.d.ts` par fonction
 > Sans inférence globale, des outils rapides (swc, oxc, esbuild) peuvent produire les déclarations en parallèle : utile dans les gros monorepos où la génération des `.d.ts` bloque les builds en cascade.
 [doc]: TypeScript 5.5 — Isolated Declarations (EN) | https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-5.html
+[niveau]: avancé
 
 ### Pourquoi `--module node20` a-t-il été ajouté en 5.9 alors que `nodenext` existe ?
 - [ ] `nodenext` est déprécié
@@ -412,3 +517,4 @@ import './polyfills';
 - [ ] `node20` n'autorise que CommonJS
 > `nodenext` est volontairement « flottant ». Pour une librairie ou une CI qui veut un comportement stable, `node20` décrit précisément Node 20+ (dont `require()` d'ESM). TS 5.8 avait introduit `node18` dans le même esprit.
 [doc]: TypeScript 5.9 — Support for --module node20 (EN) | https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-9.html
+[niveau]: avancé

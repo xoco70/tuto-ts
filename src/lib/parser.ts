@@ -1,4 +1,4 @@
-import type { DocLink, Module, Question, TrackId } from './types.ts';
+import type { Difficulty, DocLink, Module, Question, TrackId } from './types.ts';
 
 /**
  * Format d'un fichier de module :
@@ -20,11 +20,14 @@ import type { DocLink, Module, Question, TrackId } from './types.ts';
  * - [x] bonne réponse          (plusieurs [x] = choix multiples)
  * > Explication (une ou plusieurs lignes)
  * [doc]: Libellé | https://lien
+ * [niveau]: facile             (optionnel : facile | intermédiaire | avancé, intermédiaire par défaut)
  */
 
 const FRONTMATTER = /^---\n([\s\S]*?)\n---\n/;
 const OPTION = /^- \[( |x)\] (.+)$/;
 const DOC = /^\[doc\]: (.+?) \| (\S+)\s*$/;
+const LEVEL = /^\[niveau\]: (\S+)\s*$/;
+const LEVELS: Record<string, Difficulty> = { facile: 1, 'intermédiaire': 2, 'avancé': 3 };
 
 function hash(text: string): string {
   let h = 5381;
@@ -94,6 +97,7 @@ function parseQuestion(lines: string[], moduleId: string, source: string): Quest
   const answers: number[] = [];
   const explanation: string[] = [];
   const docs: DocLink[] = [];
+  let difficulty: Difficulty = 2;
   let inFence = false;
 
   for (const line of lines) {
@@ -120,6 +124,14 @@ function parseQuestion(lines: string[], moduleId: string, source: string): Quest
         docs.push({ label: doc[1], url: doc[2] });
         continue;
       }
+      const level = LEVEL.exec(line);
+      if (level) {
+        if (!LEVELS[level[1]]) {
+          throw new Error(`${source} : niveau inconnu "${level[1]}" (facile | intermédiaire | avancé)`);
+        }
+        difficulty = LEVELS[level[1]];
+        continue;
+      }
     }
     body.push(line);
   }
@@ -139,5 +151,6 @@ function parseQuestion(lines: string[], moduleId: string, source: string): Quest
     answers,
     explanation: explanation.join('\n').trim(),
     docs,
+    difficulty,
   };
 }

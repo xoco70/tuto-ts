@@ -104,6 +104,129 @@ Record<K, V>          Partial<T>         ReturnType<F>     Awaited<T>
 
 <!-- QUIZ -->
 
+### Dans `function identite<T>(x: T): T`, que représente `T` ?
+- [ ] Un type prédéfini de TypeScript, comme `string`
+- [x] Un paramètre de type, fixé par l'appelant ou déduit de l'argument
+- [ ] Une variable JavaScript disponible à l'exécution
+- [ ] Un alias de `any`
+> `T` est une sorte de variable **au niveau des types** : à chaque appel, il prend une valeur précise (`number`, `User`…), soit par inférence depuis l'argument, soit explicitement (`identite<number>(…)`). Comme tous les types, il disparaît à la compilation.
+[doc]: Handbook — Generics | https://www.typescriptlang.org/fr/docs/handbook/2/generics.html
+[niveau]: facile
+
+### Quel est le type de `r` ?
+```ts
+function identite<T>(x: T): T { return x; }
+const r = identite([1, 2, 3]);
+```
+- [ ] `any`
+- [ ] `unknown`
+- [x] `number[]`
+- [ ] `T[]`
+> TS infère `T = number[]` à partir de l'argument, et le type de retour suit : c'est tout l'intérêt d'un générique par rapport à `any`, qui aurait perdu l'information. Tu n'as rien eu à écrire entre chevrons.
+[doc]: Handbook — Generics | https://www.typescriptlang.org/fr/docs/handbook/2/generics.html
+[niveau]: facile
+
+### Comment fixer explicitement `T` à `string` lors de l'appel de `premier` ?
+```ts
+function premier<T>(arr: T[]): T | undefined { return arr[0]; }
+```
+- [x] `premier<string>([])`
+- [ ] `premier([]) as string`
+- [ ] `premier(<string>[])`
+- [ ] `premier[string]([])`
+> On passe l'argument de type entre chevrons, juste après le nom de la fonction. C'est utile quand il n'y a rien à inférer (ici un tableau vide). Le reste du temps, laisse l'inférence travailler.
+[doc]: Handbook — Generic types | https://www.typescriptlang.org/fr/docs/handbook/2/generics.html
+[niveau]: facile
+
+### Quelle déclaration compile ?
+```ts
+interface Boite<T> { contenu: T }
+```
+- [x] `const b: Boite<number> = { contenu: 1 };`
+- [ ] `const b: Boite = { contenu: 1 };`
+- [ ] `const b: Boite<number> = { contenu: 'un' };`
+- [ ] `const b: Boite[number] = { contenu: 1 };`
+> Une interface générique s'utilise avec son argument de type entre chevrons : `Boite<number>`. Sans valeur par défaut, `Boite` seul est refusé (« Generic type 'Boite' requires 1 type argument »), et `contenu` doit bien être un `number`.
+[doc]: Handbook — Generic types | https://www.typescriptlang.org/fr/docs/handbook/2/generics.html
+[niveau]: facile
+
+### Quel appel compile ?
+```ts
+function afficherId<T extends { id: number }>(x: T) {
+  return x.id;
+}
+```
+- [x] `afficherId({ id: 1, nom: 'Ada' })`
+- [ ] `afficherId({ nom: 'Ada' })`
+- [ ] `afficherId({ id: '1' })`
+- [ ] `afficherId(1)`
+> La contrainte `extends { id: number }` exige au minimum une propriété `id` numérique. Les propriétés en plus sont acceptées (typage structurel), et `T` garde le type exact de l'argument.
+[doc]: Handbook — Generic constraints | https://www.typescriptlang.org/fr/docs/handbook/2/generics.html
+[niveau]: facile
+
+### Dans cette classe, pourquoi peut-on écrire `entity.id` ?
+```ts
+class InMemoryRepository<T extends { id: string }> {
+  private items = new Map<string, T>();
+  save(entity: T) {
+    this.items.set(entity.id, entity);
+  }
+}
+```
+- [ ] Parce que tous les objets ont un `id` en TypeScript
+- [x] Grâce à la contrainte `T extends { id: string }`, qui garantit la présence de `id`
+- [ ] Parce que `Map` ajoute un `id` à ses valeurs
+- [ ] Ça ne compile pas : `T` est inconnu
+> Sans contrainte, `T` peut être n'importe quoi et `entity.id` serait refusé. La contrainte dit « tout `T`, pourvu qu'il ait un `id: string` » : on peut donc l'utiliser dans le corps de la classe.
+[doc]: Handbook — Generic classes | https://www.typescriptlang.org/fr/docs/handbook/2/generics.html
+[niveau]: facile
+
+### À quel type équivaut `Array<string>` ?
+- [x] `string[]`
+- [ ] `[string]`
+- [ ] `readonly string[]`
+- [ ] `string | string[]`
+> `Array<T>` est l'interface générique des tableaux, et `T[]` en est le raccourci : les deux écritures sont strictement identiques. `[string]` désigne un tuple d'un seul élément.
+[doc]: Handbook — Generics | https://www.typescriptlang.org/fr/docs/handbook/2/generics.html
+[niveau]: facile
+
+### Quel est le type de `tags` ?
+```ts
+const tags = new Set(['ts', 'node']);
+```
+- [x] `Set<string>`
+- [ ] `Set<any>`
+- [ ] `Set<'ts' | 'node'>`
+- [ ] `string[]`
+> `Set<T>` est une classe générique : `T` est inféré depuis le tableau passé au constructeur. Sans argument (`new Set()`), il n'y aurait rien à inférer : il faudrait alors écrire `new Set<string>()`.
+[doc]: Handbook — Generics | https://www.typescriptlang.org/fr/docs/handbook/2/generics.html
+[niveau]: facile
+
+### Quel est le type de `p` ?
+```ts
+function paire<A, B>(a: A, b: B): [A, B] {
+  return [a, b];
+}
+const p = paire('x', 1);
+```
+- [ ] `[A, B]`
+- [x] `[string, number]`
+- [ ] `(string | number)[]`
+- [ ] `[unknown, unknown]`
+> Une fonction peut déclarer plusieurs paramètres de type, chacun inféré depuis son argument : `A = string`, `B = number`. Le retour `[A, B]` devient le tuple `[string, number]`.
+[doc]: Handbook — Generics | https://www.typescriptlang.org/fr/docs/handbook/2/generics.html
+[niveau]: facile
+
+### Où peut-on déclarer un paramètre de type comme `<T>` ? (plusieurs réponses)
+- [x] Sur une fonction : `function f<T>(x: T) {}`
+- [x] Sur une interface : `interface Boite<T> {}`
+- [x] Sur une classe : `class Pile<T> {}`
+- [x] Sur un alias : `type Liste<T> = T[]`
+- [ ] Sur un enum : `enum Statut<T> {}`
+> Fonctions, interfaces, classes et alias de type peuvent tous être génériques. Les enums, eux, ne le peuvent pas : ils produisent un objet JavaScript aux valeurs fixes.
+[doc]: Handbook — Generic types | https://www.typescriptlang.org/fr/docs/handbook/2/generics.html
+[niveau]: facile
+
 ### Quel est le type de `x` ?
 ```ts
 function premier<T>(arr: T[]): T | undefined { return arr[0]; }
@@ -115,6 +238,7 @@ const x = premier(['a', 'b']);
 - [ ] `T`
 > `T` est inféré à partir de l'argument (`string[]` → `T = string`), donc le retour est `string | undefined`. Avec `noUncheckedIndexedAccess`, `arr[0]` serait d'ailleurs déjà typé `T | undefined`.
 [doc]: Handbook — Generics | https://www.typescriptlang.org/fr/docs/handbook/2/generics.html
+[niveau]: facile
 
 ### Quel appel provoque une erreur de compilation ?
 ```ts
@@ -126,6 +250,7 @@ function longueur<T extends { length: number }>(x: T) { return x.length; }
 - [ ] `longueur({ length: 0 })`
 > La contrainte `extends { length: number }` exige une propriété `length`. Les chaînes, tableaux et tout objet avec `length` conviennent (typage structurel) ; `number` non.
 [doc]: Handbook — Generic constraints | https://www.typescriptlang.org/fr/docs/handbook/2/generics.html
+[niveau]: facile
 
 ### Quel est le type de retour de `lire(user, 'age')` ?
 ```ts
@@ -161,6 +286,7 @@ type R = ApiResponse;
 - [ ] `ApiResponse<never>`
 > Un paramètre de type avec **valeur par défaut** peut être omis. Sans défaut, `ApiResponse` sans argument serait une erreur (« Generic type requires 1 type argument »).
 [doc]: Handbook — Generic parameter defaults | https://www.typescriptlang.org/fr/docs/handbook/2/generics.html
+[niveau]: facile
 
 ### Pourquoi ce code ne compile-t-il pas ?
 ```ts
@@ -186,6 +312,7 @@ const r = f({ roles: ['admin', 'user'] });
 - [ ] Rien, c'est une erreur de syntaxe
 > Les *const type parameters* (TS 5.0) évitent de demander `as const` à chaque appelant : utile pour des builders de routes, des configs ou des schémas.
 [doc]: Release notes TS 5.0 — const type parameters (EN) | https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-0.html
+[niveau]: avancé
 
 ### Avec `strictFunctionTypes`, quelle affectation est valide ? (`Chien` étend `Animal`)
 ```ts
@@ -198,6 +325,7 @@ declare let fChien: (c: Chien) => void;
 - [ ] Aucune
 > Les paramètres sont **contravariants** : une fonction qui sait traiter n'importe quel `Animal` peut être utilisée là où l'on attend un traitement de `Chien`. L'inverse est dangereux : `fChien` pourrait appeler `c.aboyer()` sur un chat.
 [doc]: Référence tsconfig — strictFunctionTypes | https://www.typescriptlang.org/fr/tsconfig#strictFunctionTypes
+[niveau]: avancé
 
 ### Quelle syntaxe déclare une fonction fléchée générique dans un fichier `.ts` ?
 - [x] `const id = <T,>(x: T): T => x;`
@@ -227,6 +355,7 @@ declare const p: P;
 - [ ] Elles sont effacées à la compilation
 > Pour des raisons de compatibilité (notamment `Array<T>`), TS vérifie les paramètres de **méthodes** de façon bivariante. Les **propriétés de type fonction** bénéficient du contrôle contravariant strict.
 [doc]: Référence tsconfig — strictFunctionTypes | https://www.typescriptlang.org/fr/tsconfig#strictFunctionTypes
+[niveau]: avancé
 
 ### Que signifie `interface Producteur<out T> { get(): T }` ?
 - [ ] `T` est exporté du module
@@ -235,6 +364,7 @@ declare const p: P;
 - [ ] `T` ne peut pas être un objet
 > Les annotations de variance `in`/`out` (TS 4.7) documentent et accélèrent la vérification. TS signale une erreur si `T` est utilisé en entrée alors qu'il est déclaré `out`.
 [doc]: Release notes TS 4.7 — Variance annotations (EN) | https://www.typescriptlang.org/docs/handbook/release-notes/typescript-4-7.html
+[niveau]: avancé
 
 ### Comment typer une fonction qui fusionne deux objets en conservant les deux types ?
 - [ ] `function merge(a: object, b: object): object`
@@ -271,6 +401,7 @@ const b: Boite = { contenu: 'livre' };
 - [ ] Erreur : il manque l'argument de type
 > Un paramètre de type peut avoir une **valeur par défaut**, utilisée quand on ne précise rien et qu'il n'y a rien à inférer. Exemple réel : `Type<T = any>` dans NestJS, ou `Promise<T>` dans certaines signatures de librairies.
 [doc]: Handbook — Generic parameter defaults | https://www.typescriptlang.org/fr/docs/handbook/2/generics.html
+[niveau]: facile
 
 ### Ce code compile-t-il ?
 ```ts
@@ -285,6 +416,7 @@ paire(1, 'a');
 - [ ] Non : un générique ne peut apparaître qu'une fois dans les paramètres
 > Face à plusieurs candidats, TS ne fabrique pas d'union automatiquement : il retient un candidat et vérifie les autres. Si l'union est voulue, on l'explicite : `paire<string | number>(1, 'a')`.
 [doc]: Handbook — Generics | https://www.typescriptlang.org/fr/docs/handbook/2/generics.html
+[niveau]: avancé
 
 ### Pourquoi cette classe ne compile-t-elle pas ?
 ```ts
@@ -310,6 +442,7 @@ creerMachine(['idle', 'loading'], 'done');
 - [ ] Il empêche d'inférer `S` partout, il faut l'expliciter
 > Sans `NoInfer`, TS utiliserait aussi `initial` comme source d'inférence et `S` deviendrait `'idle' | 'loading' | 'done'` — sans erreur. `NoInfer<T>` exclut une position de l'inférence pour qu'elle serve seulement de vérification.
 [doc]: TypeScript 5.4 — NoInfer | https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-4.html
+[niveau]: avancé
 
 ### Quel est le type de `m` ?
 ```ts
@@ -334,6 +467,7 @@ function defaut<T extends string>(): T {
 - [ ] `'a'` n'est pas une `string`
 > La contrainte `extends string` donne une borne, pas le type exact : l'appelant peut choisir `defaut<'b'>()`. Le corps doit fonctionner pour **tout** `T` possible. Si la fonction renvoie toujours une `string`, le générique est inutile.
 [doc]: Handbook — Generic constraints | https://www.typescriptlang.org/fr/docs/handbook/2/generics.html
+[niveau]: avancé
 
 ### Quel appel ne compile pas ?
 ```ts
@@ -347,6 +481,7 @@ function plusLong<T extends { length: number }>(a: T, b: T): T {
 - [ ] Ils compilent tous
 > La contrainte exige une propriété `length` : tableaux et chaînes l'ont, pas `number`. Et le type de retour reste précis : `number[]` dans le premier cas, `string` dans le second.
 [doc]: Handbook — Generic constraints | https://www.typescriptlang.org/fr/docs/handbook/2/generics.html
+[niveau]: facile
 
 ### Quel est le type de `emails` ?
 ```ts
